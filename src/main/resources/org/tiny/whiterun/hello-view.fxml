@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
-
+<?import javafx.scene.layout.*?>
 <VBox alignment="CENTER" spacing="20.0" style="-fx-background-image: url(background.jpg);" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx" fx:controller="org.tiny.whiterun.MainController">
     <AnchorPane>
 
@@ -17,7 +15,7 @@
             <!-- Première boîte (25%) -->
             <VBox fx:id="boxTop" style="-fx-background-color: rgba(255, 255, 255, 0.8); -fx-border-radius: 10; -fx-background-radius: 10;" VBox.vgrow="ALWAYS">
                 <VBox.margin>
-                    <Insets bottom="10" top="0" />
+                    <Insets bottom="10"/>
                 </VBox.margin>
                 <fx:include fx:id="configPane" source="ConfigPane.fxml" />
             </VBox>

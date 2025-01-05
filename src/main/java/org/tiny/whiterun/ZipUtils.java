@@ -1,9 +1,19 @@
 package org.tiny.whiterun;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
-import java.util.zip.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Enumeration;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class ZipUtils {
 
@@ -30,7 +40,7 @@ public class ZipUtils {
      * Décompresse un fichier ZIP dans un dossier de destination.
      * Les fichiers existants seront écrasés.
      *
-     * @param zipFilePath    Chemin du fichier ZIP à décompresser.
+     * @param zipFilePath Chemin du fichier ZIP à décompresser.
      * @throws IOException Si une erreur survient lors de la décompression.
      */
     public void unzip(String zipFilePath) throws IOException {
@@ -50,7 +60,7 @@ public class ZipUtils {
                 }
 
                 Path filePath = destDirPath.resolve(entry.getName().substring("assets/".length()));
-                
+
                 if (entry.isDirectory()) {
                     // Crée les sous-dossiers
                     if (!Files.exists(filePath)) {
@@ -79,9 +89,8 @@ public class ZipUtils {
      */
     public void compress(String sourceDirPath, String zipFilePath) throws IOException {
         Path sourceDir = Paths.get(sourceDirPath);
-        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFilePath))) {
-            Files.walk(sourceDir)
-                    .filter(path -> !Files.isDirectory(path))
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFilePath)); Stream<Path> walk = Files.walk(sourceDir)) {
+            walk.filter(path -> !Files.isDirectory(path))
                     .forEach(path -> {
                         ZipEntry zipEntry = new ZipEntry(sourceDir.relativize(path).toString());
                         try {
@@ -95,13 +104,13 @@ public class ZipUtils {
         }
     }
 
-    public  String listZipContentsAsTree(String zipFilePath) throws IOException {
+    public String listZipContentsAsTree(String zipFilePath) throws IOException {
         StringBuilder treeBuilder = new StringBuilder();
         try (ZipFile zipFile = new ZipFile(GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                if(entry.isDirectory()) {
+                if (entry.isDirectory()) {
                     continue;
                 }
                 String path = entry.getName();

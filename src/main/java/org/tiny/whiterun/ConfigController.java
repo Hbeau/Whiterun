@@ -3,7 +3,6 @@ package org.tiny.whiterun;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 
@@ -13,12 +12,11 @@ import java.io.IOException;
 
 public class ConfigController {
 
-    public ImageView backgroundImage;
     public TextField pathField;
     public Pane config;
     public static EventType<MyEvent> OPTIONS_ALL = new EventType<>("OPTIONS_ALL");
     @FXML
-    protected void onBrowseForRoot() throws IOException {
+    protected void onBrowseForRoot() {
         DirectoryChooser fileChooser = new DirectoryChooser();
         File file = fileChooser.showDialog(null);
         GameDirManager instance = GameDirManager.getInstance();

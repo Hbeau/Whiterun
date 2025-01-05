@@ -4,16 +4,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.nio.file.*;
-import java.time.temporal.ChronoUnit;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static java.nio.file.StandardWatchEventKinds.*;
 
 public class GameDirManager {
     public static final String ASSETS_PACK = "assets-pack";
@@ -168,7 +167,7 @@ public class GameDirManager {
                         .forEach(path -> {
                             try {
                                 if (Files.isRegularFile(path)) {
-                                    String zipEntryName = "assets\\" + assetsPath.relativize(path).toString();
+                                    String zipEntryName = "assets\\" + assetsPath.relativize(path);
                                     zipOut.putNextEntry(new ZipEntry(zipEntryName));
                                     Files.copy(path, zipOut);
                                     zipOut.closeEntry();

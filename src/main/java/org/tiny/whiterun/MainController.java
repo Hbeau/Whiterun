@@ -1,6 +1,5 @@
 package org.tiny.whiterun;
 
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
 

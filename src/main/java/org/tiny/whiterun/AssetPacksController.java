@@ -1,7 +1,6 @@
 package org.tiny.whiterun;
 
 
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -12,7 +11,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -36,7 +34,7 @@ public class AssetPacksController {
         }
     }
     @FXML
-    public void onClicked(MouseEvent mouseEvent) throws IOException {
+    public void onClicked(MouseEvent _mouseEvent) throws IOException {
         String selectedAsset = assetsList.getSelectionModel().getSelectedItem();
         showDialog(selectedAsset);
     }
@@ -62,11 +60,13 @@ public class AssetPacksController {
         alert.getDialogPane().setExpandableContent(expContent);
 
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.get() == ButtonType.OK){
-            System.out.println("ok");
-            ZipUtils.getInstance().unzip(selectedAsset);
-        } else {
-            System.out.println("no");
+        if (result.isPresent()) {
+            if (result.get() == ButtonType.OK) {
+                System.out.println("ok");
+                ZipUtils.getInstance().unzip(selectedAsset);
+            } else {
+                System.out.println("no");
+            }
         }
     }
 }
