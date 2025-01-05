@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.Pane?>
+
+<!-- Placeholder for AssetList; Implement in Java -->
+
+<?import javafx.scene.layout.HBox?>
+<HBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.tiny.whiterun.AssetPacksController">
+    <ListView fx:id="assetsList" onMouseClicked="#onClicked" HBox.hgrow="ALWAYS" />
+</HBox>

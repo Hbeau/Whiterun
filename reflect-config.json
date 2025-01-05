@@ -1,0 +1,12 @@
+[
+  {
+    "name": "javafx.application.Application",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "javafx.scene.Parent",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  }
+]
