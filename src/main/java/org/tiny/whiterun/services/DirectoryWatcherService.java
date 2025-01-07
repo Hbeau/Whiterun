@@ -1,10 +1,12 @@
-package org.tiny.whiterun;
+package org.tiny.whiterun.services;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import org.json.JSONObject;
+import org.tiny.whiterun.models.AssetsPack;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -15,7 +17,7 @@ public class DirectoryWatcherService extends Service<Void> {
     private final Path directoryToWatch;
 
     // Observable list to store the directory's files
-    private final ObservableList<String> fileList;
+    private final ObservableList<AssetsPack> fileList;
 
     /**
      * Constructor to initialize the service with the specified directory.
@@ -39,10 +41,24 @@ public class DirectoryWatcherService extends Service<Void> {
     private void loadInitialFiles() {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directoryToWatch)) {
             for (Path path : stream) {
-                fileList.add(path.getFileName().toString());
+                fileList.add(createAssetPack(path));
             }
         } catch (IOException e) {
             throw new RuntimeException("Error loading initial files: " + e.getMessage(), e);
+        }
+    }
+
+    private AssetsPack createAssetPack(Path path) {
+        try {
+            Path fileName = path.getFileName();
+            String s = ZipUtils.getInstance().extractManifest(fileName);
+            byte[] thumbnail = ZipUtils.getInstance().extractThumbnail(fileName);
+            JSONObject jsonObject = new JSONObject(s);
+            String name = jsonObject.getString("name");
+            String description = jsonObject.getString("description");
+            return new AssetsPack(name, description, thumbnail, fileName);
+        } catch (IOException e) {
+            return null;
         }
     }
 
@@ -51,7 +67,7 @@ public class DirectoryWatcherService extends Service<Void> {
      *
      * @return ObservableList of file names.
      */
-    public ObservableList<String> getFileList() {
+    public ObservableList<AssetsPack> getFileList() {
         return fileList;
     }
 
@@ -149,9 +165,9 @@ public class DirectoryWatcherService extends Service<Void> {
             private void updateFileList(WatchEvent.Kind<?> kind, Path fileName) {
                     Platform.runLater(() -> {
                         if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                            fileList.add(fileName.toString());
+                            fileList.add(createAssetPack(fileName));
                         } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-                            fileList.remove(fileName.toString());
+                            fileList.remove(createAssetPack(fileName));
                         } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
                             updateMessage("File modified: " + fileName);
                         }

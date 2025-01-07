@@ -1,15 +1,16 @@
-package org.tiny.whiterun;
+package org.tiny.whiterun.controllers;
 
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
+import org.tiny.whiterun.services.GameDirManager;
 
 public class MainController {
 
     public Pane configPane;
     @FXML
-    AssetPacksController assetPaneController;
+    public AssetPacksController assetPaneController;
     @FXML
-    ConfigController configPaneController;
+    public ConfigController configPaneController;
 
     @FXML
     void initialize(){

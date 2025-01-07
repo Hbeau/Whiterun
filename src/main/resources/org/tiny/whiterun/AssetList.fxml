@@ -4,6 +4,7 @@
 
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.HBox?>
-<HBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.tiny.whiterun.AssetPacksController">
+<HBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.tiny.whiterun.controllers.AssetPacksController">
     <ListView fx:id="assetsList" onMouseClicked="#onClicked" HBox.hgrow="ALWAYS" />
 </HBox>

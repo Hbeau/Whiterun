@@ -1,4 +1,4 @@
-package org.tiny.whiterun;
+package org.tiny.whiterun.services;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -7,8 +7,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -176,12 +175,36 @@ public class GameDirManager {
                                 throw new RuntimeException("Erreur lors de la compression du fichier " + path + ": " + e.getMessage(), e);
                             }
                         });
+                Path thumbnailPath = Path.of(Objects.requireNonNull(getClass().getResource("default_thumbnail.jpg")).toURI());
+                zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
+                zipOut.write(new FileInputStream(thumbnailPath.toFile()).readAllBytes());
+                zipOut.closeEntry();
+                Path manifestPath = Path.of(Objects.requireNonNull(getClass().getResource("manifest.json")).toURI());
+                zipOut.putNextEntry(new ZipEntry("manifest.json"));
+                zipOut.write(new FileInputStream(manifestPath.toFile()).readAllBytes());
+                zipOut.closeEntry();
             }
             System.out.println("Dossier 'assets' compressé et enregistré dans '" + zipFilePath + "'.");
 
         } catch (Exception e) {
             System.err.println("Erreur lors de la création du pack d'assets : " + e.getMessage());
         }
+    }
+
+    public List<String> getInstalledPack() {
+        String property = properties.getProperty("installed", "");
+        return Arrays.asList(property.split(","));
+    }
+
+    public void registerInstallation(String pack) {
+        String property = properties.getProperty("installed", "");
+        List<String> installedPacks = new ArrayList<>(List.of(property.split(",")));
+        if (!installedPacks.contains(pack)) {
+            installedPacks.add(pack);
+        }
+        String joined = String.join(",", installedPacks);
+        properties.put("installed", joined);
+        storeProperties();
     }
 
     private void storeProperties() {

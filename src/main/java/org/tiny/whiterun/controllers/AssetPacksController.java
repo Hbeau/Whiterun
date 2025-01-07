@@ -1,4 +1,4 @@
-package org.tiny.whiterun;
+package org.tiny.whiterun.controllers;
 
 
 import javafx.collections.ObservableList;
@@ -10,21 +10,31 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import org.tiny.whiterun.models.AssetsPack;
+import org.tiny.whiterun.models.PackCell;
+import org.tiny.whiterun.services.DirectoryWatcherService;
+import org.tiny.whiterun.services.GameDirManager;
+import org.tiny.whiterun.services.ZipUtils;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class AssetPacksController {
 
 
-    public ListView<String> assetsList;
+    public ListView<AssetsPack> assetsList;
 
+    @FXML
+    void initialize() {
+        assetsList.setCellFactory(param -> new PackCell());
+    }
     public void watch() {
         try {
             DirectoryWatcherService watcherService = new DirectoryWatcherService(GameDirManager.getInstance().getAssetPackFolder().getPath());
 
             // Lier les messages de mise à jour au label
-            ObservableList<String> fileList = watcherService.getFileList();
+            ObservableList<AssetsPack> fileList = watcherService.getFileList();
             assetsList.setItems(fileList);
 
             // Démarrer le service
@@ -35,13 +45,16 @@ public class AssetPacksController {
     }
     @FXML
     public void onClicked(MouseEvent _mouseEvent) throws IOException {
-        String selectedAsset = assetsList.getSelectionModel().getSelectedItem();
-        showDialog(selectedAsset);
+        AssetsPack selectedAsset = assetsList.getSelectionModel().getSelectedItem();
+        if (selectedAsset != null) {
+            showDialog(selectedAsset.getArchivePath());
+        }
     }
-    private void showDialog(String selectedAsset) throws IOException {
+
+    private void showDialog(Path selectedAsset) throws IOException {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmation Dialog");
-        alert.setHeaderText("Look, a Confirmation Dialog");
+        alert.setTitle("Install an new assets pack");
+        alert.setHeaderText("Are you sure to want to install this pack");
         alert.setContentText("Install asset :" + selectedAsset);
         TextArea textArea = new TextArea(ZipUtils.getInstance().listZipContentsAsTree(selectedAsset));
         textArea.setEditable(false);
@@ -63,7 +76,8 @@ public class AssetPacksController {
         if (result.isPresent()) {
             if (result.get() == ButtonType.OK) {
                 System.out.println("ok");
-                ZipUtils.getInstance().unzip(selectedAsset);
+                ZipUtils.getInstance().installPack(selectedAsset);
+                GameDirManager.getInstance().registerInstallation(selectedAsset.toString());
             } else {
                 System.out.println("no");
             }

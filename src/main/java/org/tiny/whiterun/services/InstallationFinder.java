@@ -1,4 +1,4 @@
-package org.tiny.whiterun;
+package org.tiny.whiterun.services;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;

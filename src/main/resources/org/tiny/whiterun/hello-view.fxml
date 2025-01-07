@@ -2,7 +2,9 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<VBox alignment="CENTER" spacing="20.0" style="-fx-background-image: url(background.jpg);" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx" fx:controller="org.tiny.whiterun.MainController">
+<VBox alignment="CENTER" spacing="20.0" style="-fx-background-image: url(background.jpg);"
+      xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx"
+      fx:controller="org.tiny.whiterun.controllers.MainController">
     <AnchorPane>
 
         <!-- Conteneur principal pour les deux boîtes -->
