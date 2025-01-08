@@ -4,8 +4,9 @@ module org.tiny.whiterun {
     requires com.sun.jna.platform;
     requires javafx.fxml;
     requires javafx.controls;
-    requires java.desktop;
     requires org.apache.commons.io;
+    requires java.desktop;
+    requires org.slf4j;
 
 
     opens org.tiny.whiterun to javafx.fxml;

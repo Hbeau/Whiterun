@@ -9,21 +9,20 @@ import java.util.Optional;
 public class InstallationFinder {
 
     private static final String REGISTRY_PATH = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+    public static final String TINY_GLADE = "Tiny Glade";
+    public static final String DISPLAY_NAME = "DisplayName";
 
     public Optional<String> findGameFolder(){
         try {
-            // Parcourt toutes les sous-clés dans la clé de désinstallation
             String[] subKeys = Advapi32Util.registryGetKeys(WinReg.HKEY_LOCAL_MACHINE, REGISTRY_PATH);
 
             for (String subKey : subKeys) {
                 String fullPath = REGISTRY_PATH + "\\" + subKey;
 
-                // Vérifie si la sous-clé contient un DisplayName égal à "tiny glade"
-                if (Advapi32Util.registryValueExists(WinReg.HKEY_LOCAL_MACHINE, fullPath, "DisplayName")) {
-                    String displayName = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, fullPath, "DisplayName");
+                if (Advapi32Util.registryValueExists(WinReg.HKEY_LOCAL_MACHINE, fullPath, DISPLAY_NAME)) {
+                    String displayName = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, fullPath, DISPLAY_NAME);
 
-                    if ("Tiny Glade".equalsIgnoreCase(displayName)) {
-                        // Retourne le chemin d'installation
+                    if (TINY_GLADE.equalsIgnoreCase(displayName)) {
                         if (Advapi32Util.registryValueExists(WinReg.HKEY_LOCAL_MACHINE, fullPath, "InstallLocation")) {
                             return Optional.of(Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, fullPath, "InstallLocation"));
                         }

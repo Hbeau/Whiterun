@@ -17,7 +17,7 @@ public class MainController {
         if(GameDirManager.getInstance().isPatched()) {
             assetPaneController.watch();
         }
-        configPane.addEventHandler(ConfigController.OPTIONS_ALL, myEvent -> {
+        configPane.addEventHandler(ConfigController.OPTIONS_ALL, patchedEvent -> {
             if(GameDirManager.getInstance().isPatched()) {
                 assetPaneController.watch();
             }

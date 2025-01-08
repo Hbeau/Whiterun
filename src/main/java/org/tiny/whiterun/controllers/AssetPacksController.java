@@ -10,6 +10,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.models.AssetsPack;
 import org.tiny.whiterun.models.PackCell;
 import org.tiny.whiterun.services.DirectoryWatcherService;
@@ -22,6 +24,8 @@ import java.util.Optional;
 
 public class AssetPacksController {
 
+    private static final Logger log = LoggerFactory.getLogger(AssetPacksController.class);
+
 
     public ListView<AssetsPack> assetsList;
 
@@ -33,19 +37,19 @@ public class AssetPacksController {
         try {
             DirectoryWatcherService watcherService = new DirectoryWatcherService(GameDirManager.getInstance().getAssetPackFolder().getPath());
 
-            // Lier les messages de mise à jour au label
             ObservableList<AssetsPack> fileList = watcherService.getFileList();
             assetsList.setItems(fileList);
 
-            // Démarrer le service
             watcherService.start();
         } catch (Exception e){
+            log.error(e.getMessage());
             System.err.println(e.getMessage());
         }
     }
     @FXML
     public void onClicked(MouseEvent _mouseEvent) throws IOException {
         AssetsPack selectedAsset = assetsList.getSelectionModel().getSelectedItem();
+        log.info("Asset pack selected {}", assetsList);
         if (selectedAsset != null) {
             showDialog(selectedAsset.getArchivePath());
         }

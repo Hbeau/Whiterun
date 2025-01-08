@@ -1,5 +1,6 @@
 package org.tiny.whiterun.services;
 
+import javafx.concurrent.Task;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,7 +22,7 @@ public class GameDirManager {
 
     private final Path settings;
 
-    private boolean patched;
+    private final boolean patched;
 
     private File gameRootPath;
 
@@ -85,20 +86,29 @@ public class GameDirManager {
     }
 
 
-    public void patchGame() {
-        if (patched) {
-            return;
-        }
-        try {
-            cleanManifest();
-            createAssetsPack();
-            this.patched = true;
-            properties.setProperty("patched", String.valueOf(true));
-            storeProperties();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
+    public Task<Void> patchGame() {
+        return new Task<>() {
+            @Override
+            protected Void call() {
+                if (patched) {
+                    return null;
+                }
+                try {
+                    updateMessage("Clean Manifest file");
+                    cleanManifest();
+                    Thread.sleep(500);
+                    updateMessage("Create default assets pack (this might take a while)");
+                    createAssetsPack();
+                    properties.setProperty("patched", String.valueOf(true));
+                    storeProperties();
+                    updateMessage("Finished");
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return null;
+            }
+        };
     }
 
     private void cleanManifest() throws Exception {
@@ -176,13 +186,17 @@ public class GameDirManager {
                             }
                         });
                 Path thumbnailPath = Path.of(Objects.requireNonNull(getClass().getResource("default_thumbnail.jpg")).toURI());
-                zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
-                zipOut.write(new FileInputStream(thumbnailPath.toFile()).readAllBytes());
-                zipOut.closeEntry();
                 Path manifestPath = Path.of(Objects.requireNonNull(getClass().getResource("manifest.json")).toURI());
-                zipOut.putNextEntry(new ZipEntry("manifest.json"));
-                zipOut.write(new FileInputStream(manifestPath.toFile()).readAllBytes());
-                zipOut.closeEntry();
+                try (InputStream thumbnailInput = new FileInputStream(thumbnailPath.toFile());
+                     FileInputStream manifestInput = new FileInputStream(manifestPath.toFile())) {
+                    zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
+                    zipOut.write(thumbnailInput.readAllBytes());
+                    zipOut.closeEntry();
+                    zipOut.putNextEntry(new ZipEntry("manifest.json"));
+                    zipOut.write(manifestInput.readAllBytes());
+                    zipOut.closeEntry();
+                }
+
             }
             System.out.println("Dossier 'assets' compressé et enregistré dans '" + zipFilePath + "'.");
 

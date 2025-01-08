@@ -7,22 +7,18 @@
       fx:controller="org.tiny.whiterun.controllers.MainController">
     <AnchorPane>
 
-        <!-- Conteneur principal pour les deux boîtes -->
         <VBox spacing="10" style="-fx-padding: 20;">
             <AnchorPane.topAnchor>0</AnchorPane.topAnchor>
             <AnchorPane.bottomAnchor>0</AnchorPane.bottomAnchor>
             <AnchorPane.leftAnchor>0</AnchorPane.leftAnchor>
             <AnchorPane.rightAnchor>0</AnchorPane.rightAnchor>
 
-            <!-- Première boîte (25%) -->
             <VBox fx:id="boxTop" style="-fx-background-color: rgba(255, 255, 255, 0.8); -fx-border-radius: 10; -fx-background-radius: 10;" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets bottom="10"/>
                 </VBox.margin>
                 <fx:include fx:id="configPane" source="ConfigPane.fxml" />
             </VBox>
-
-            <!-- Deuxième boîte (75%) -->
             <VBox fx:id="boxBottom" style="-fx-background-color: rgba(255, 255, 255, 0.8); -fx-border-radius: 10; -fx-background-radius: 10;" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets top="10" />

@@ -39,22 +39,15 @@ public class ConfigController {
 
     @FXML
     protected void onPatchGameClicked(){
-        Task<Void> longRunningTask = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                GameDirManager instance = GameDirManager.getInstance();
-                updateMessage("coucou");
-                instance.patchGame();
-                updateMessage("finished");
-                return null;
-            }
-        };
+
+        GameDirManager instance = GameDirManager.getInstance();
+
+        Task<Void> longRunningTask = instance.patchGame();
+
         Stage progressDialog = createProgressDialog(longRunningTask);
 
-        // Step 3: Run the Task in the Background
         new Thread(longRunningTask).start();
 
-        // Step 4: Handle Task Completion
         longRunningTask.setOnSucceeded(event -> {
             progressDialog.close();
 
@@ -72,25 +65,26 @@ public class ConfigController {
     }
     @FXML
     protected void onAddAssetsPackClicked() throws IOException {
-        System.out.println("clicked");
         GameDirManager instance = GameDirManager.getInstance();
         Desktop.getDesktop().open(instance.getAssetPackFolder());
     }
 
     private Stage createProgressDialog(Task<?> task) {
 
-        Stage stage = new Stage(StageStyle.UTILITY);
+        Stage stage = new Stage(StageStyle.UNDECORATED);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Processing");
 
         // Create the UI
         ProgressBar progressBar = new ProgressBar();
+        progressBar.autosize();
         progressBar.progressProperty().bind(task.progressProperty());
-
+        progressBar.setMaxWidth(300);
         Text progressText = new Text("Processing...");
         progressText.textProperty().bind(task.messageProperty());
 
         VBox layout = new VBox(10, progressText, progressBar);
+        layout.setFillWidth(true);
         layout.setStyle("-fx-padding: 20; -fx-alignment: center; -fx-background-color: #f4f4f4; -fx-border-color: #ccc;");
         Scene scene = new Scene(layout);
 
