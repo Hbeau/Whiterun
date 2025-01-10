@@ -17,8 +17,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import static org.tiny.whiterun.services.GameDirManager.ASSETS_PACK;
-
 public class ZipUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ZipUtils.class);
@@ -96,7 +94,7 @@ public class ZipUtils {
 
     public void createAssetsPack(Path assetsPath) {
         try {
-            Path assetsPackPath = Paths.get(GameDirManager.getInstance().getAssetPackFolder().getPath(), ASSETS_PACK);
+            Path assetsPackPath = GameDirManager.getInstance().getAssetPackFolder().toPath();
 
             if (!Files.isDirectory(assetsPath)) {
                 throw new FileNotFoundException("The 'assets' folder was not found in" + assetsPackPath + ".");

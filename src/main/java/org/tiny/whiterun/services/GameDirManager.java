@@ -23,7 +23,7 @@ public class GameDirManager {
 
     private final Path settings;
 
-    private final boolean patched;
+    private boolean patched;
 
     private File gameRootPath;
 
@@ -104,6 +104,7 @@ public class GameDirManager {
                     updateMessage("Create default assets pack (this might take a while)");
                     Path assetPath = Paths.get(gameRootPath.getPath(), "assets");
                     ZipUtils.getInstance().createAssetsPack(assetPath);
+                    patched = true;
                     properties.setProperty("patched", String.valueOf(true));
                     storeProperties();
                     log.info("patch complete");
@@ -124,7 +125,7 @@ public class GameDirManager {
         Path manifestPath = Paths.get(gameRootPath.getPath(), "manifest.json");
 
         if (!Files.isRegularFile(manifestPath)) {
-            throw new FileNotFoundException("Le fichier 'manifest.json' est introuvable dans le dossier " + gameRootPath + ".");
+            throw new FileNotFoundException("The file 'manifest.json' was not found in the folder" + gameRootPath + ".");
         }
 
         String manifestContent = new String(Files.readAllBytes(manifestPath));

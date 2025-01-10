@@ -7,6 +7,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -31,7 +32,23 @@ public class AssetPacksController {
 
     @FXML
     void initialize() {
-        assetsList.setCellFactory(param -> new PackCell());
+        assetsList.setCellFactory(param -> {
+            PackCell packCell = new PackCell();
+            packCell.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                if (event.getButton() == MouseButton.PRIMARY && (!packCell.isEmpty())) {
+                    AssetsPack selectedAsset = packCell.getItem();
+                    if (selectedAsset != null) {
+                        try {
+                            showDialog(selectedAsset.getArchivePath());
+                        } catch (IOException e) {
+                            log.error("error while installing assets", e);
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            });
+            return packCell;
+        });
     }
     public void watch() {
         try {
@@ -43,14 +60,6 @@ public class AssetPacksController {
             watcherService.start();
         } catch (Exception e){
             log.error(e.getMessage());
-        }
-    }
-    @FXML
-    public void onClicked(MouseEvent _mouseEvent) throws IOException {
-        AssetsPack selectedAsset = assetsList.getSelectionModel().getSelectedItem();
-        log.info("Asset pack selected {}", assetsList);
-        if (selectedAsset != null) {
-            showDialog(selectedAsset.getArchivePath());
         }
     }
 

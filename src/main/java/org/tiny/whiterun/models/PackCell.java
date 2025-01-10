@@ -62,6 +62,7 @@ public class PackCell extends ListCell<AssetsPack> {
         }
     }
 
+
     private static boolean doesContain(AssetsPack item) {
         return GameDirManager.getInstance().getInstalledPack().contains(item.getArchivePath().toString());
     }
