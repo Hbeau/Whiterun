@@ -6,12 +6,16 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.models.AssetsPack;
 
 import java.io.IOException;
 import java.nio.file.*;
 
 public class DirectoryWatcherService extends Service<Void> {
+
+    private static final Logger log = LoggerFactory.getLogger(DirectoryWatcherService.class);
 
     // Path to the directory being watched
     private final Path directoryToWatch;
@@ -142,6 +146,7 @@ public class DirectoryWatcherService extends Service<Void> {
              */
             private void processWatchEvents(WatchKey key) {
                 for (WatchEvent<?> event : key.pollEvents()) {
+
                     WatchEvent.Kind<?> kind = event.kind();
 
                     // Ignore overflow events
@@ -151,7 +156,7 @@ public class DirectoryWatcherService extends Service<Void> {
 
                     WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
                     Path fileName = pathEvent.context();
-
+                    log.info("New file event {}", fileName);
                     updateFileList(kind, fileName);
                 }
             }
@@ -163,7 +168,8 @@ public class DirectoryWatcherService extends Service<Void> {
              * @param fileName The name of the file involved in the event.
              */
             private void updateFileList(WatchEvent.Kind<?> kind, Path fileName) {
-                    Platform.runLater(() -> {
+
+                Platform.runLater(() -> {
                         if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
                             fileList.add(createAssetPack(fileName));
                         } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {

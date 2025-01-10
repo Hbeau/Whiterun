@@ -2,11 +2,15 @@ package org.tiny.whiterun.services;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 
 public class InstallationFinder {
+
+    private static final Logger log = LoggerFactory.getLogger(InstallationFinder.class);
 
     private static final String REGISTRY_PATH = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
     public static final String TINY_GLADE = "Tiny Glade";
@@ -30,7 +34,7 @@ public class InstallationFinder {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Erreur lors de la lecture du registre : " + e.getMessage());
+            log.error("Error while reading registry", e);
         }
         return Optional.empty();
 

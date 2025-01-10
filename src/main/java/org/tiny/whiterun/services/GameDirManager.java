@@ -3,18 +3,19 @@ package org.tiny.whiterun.services;
 import javafx.concurrent.Task;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 
 public class GameDirManager {
+
+    private static final Logger log = LoggerFactory.getLogger(GameDirManager.class);
     public static final String ASSETS_PACK = "assets-pack";
     private static GameDirManager instance;
 
@@ -61,7 +62,6 @@ public class GameDirManager {
     }
 
     public String getGameRootPath() {
-        System.out.println(gameRootPath);
         if (gameRootPath != null) {
             return gameRootPath.getAbsolutePath();
         }
@@ -74,9 +74,11 @@ public class GameDirManager {
 
     public File getAssetPackFolder() throws FileNotFoundException {
         if (gameRootPath != null) {
-            return Paths.get(gameRootPath.getPath(), ASSETS_PACK).toFile();
+            Path path = Paths.get(gameRootPath.getPath(), ASSETS_PACK);
+            log.info("Get asset pack at Location {}", path);
+            return path.toFile();
         }
-        throw new FileNotFoundException("Le fichier 'manifest.json' est introuvable dans le dossier.");
+        throw new FileNotFoundException("Game root path is null");
     }
 
     public void setGameRootPath(File gameRootPath) {
@@ -94,24 +96,30 @@ public class GameDirManager {
                     return null;
                 }
                 try {
+                    log.info("Clean Manifest file");
                     updateMessage("Clean Manifest file");
                     cleanManifest();
                     Thread.sleep(500);
+                    log.info("Create default assets pack");
                     updateMessage("Create default assets pack (this might take a while)");
-                    createAssetsPack();
+                    Path assetPath = Paths.get(gameRootPath.getPath(), "assets");
+                    ZipUtils.getInstance().createAssetsPack(assetPath);
                     properties.setProperty("patched", String.valueOf(true));
                     storeProperties();
+                    log.info("patch complete");
                     updateMessage("Finished");
                     Thread.sleep(500);
-                } catch (Exception e) {
+
+                    return null;
+                } catch (IOException | InterruptedException e) {
+                    log.error("Error while patching the game", e);
                     throw new RuntimeException(e);
                 }
-                return null;
             }
         };
     }
 
-    private void cleanManifest() throws Exception {
+    private void cleanManifest() throws IOException {
 
         Path manifestPath = Paths.get(gameRootPath.getPath(), "manifest.json");
 
@@ -119,26 +127,23 @@ public class GameDirManager {
             throw new FileNotFoundException("Le fichier 'manifest.json' est introuvable dans le dossier " + gameRootPath + ".");
         }
 
-        // Lire le fichier manifest.json
         String manifestContent = new String(Files.readAllBytes(manifestPath));
         JSONObject manifestData = getJsonObject(manifestContent);
 
-        // Réécrire le fichier manifest.json
         try (BufferedWriter writer = Files.newBufferedWriter(manifestPath)) {
             writer.write(manifestData.toString(4));
         }
 
-        System.out.println("Le fichier manifest.json a été nettoyé et mis à jour dans " + gameRootPath + ".");
+        log.info("Manifest file has bean patched in {}.", gameRootPath);
     }
 
     private static JSONObject getJsonObject(String manifestContent) {
         JSONObject manifestData = new JSONObject(manifestContent);
 
         if (!manifestData.has("files")) {
-            throw new IllegalArgumentException("Le fichier manifest.json ne contient pas de clé 'files'.");
+            throw new IllegalArgumentException("The manifest.json file does not contain a 'files' key.");
         }
 
-        // Filtrer les fichiers pour exclure ceux contenant '/assets/'
         JSONArray files = manifestData.getJSONArray("files");
         JSONArray filteredFiles = new JSONArray();
 
@@ -151,58 +156,6 @@ public class GameDirManager {
 
         manifestData.put("files", filteredFiles);
         return manifestData;
-    }
-
-    private void createAssetsPack() {
-        try {
-            Path assetsPath = Paths.get(gameRootPath.getPath(), "assets");
-            Path assetsPackPath = Paths.get(gameRootPath.getPath(), ASSETS_PACK);
-
-            if (!Files.isDirectory(assetsPath)) {
-                throw new FileNotFoundException("Le dossier 'assets' est introuvable dans " + gameRootPath + ".");
-            }
-
-            if (!Files.exists(assetsPackPath)) {
-                Files.createDirectories(assetsPackPath);
-                System.out.println("Dossier 'assets-pack' créé à l'emplacement " + assetsPackPath + ".");
-            }
-
-            Path zipFilePath = assetsPackPath.resolve("default.zip");
-
-            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFilePath));
-                 Stream<Path> walk = Files.walk(assetsPath)) {
-                walk
-                        .filter(path -> !path.toString().contains("audio")) // Exclure le dossier 'audio'
-                        .forEach(path -> {
-                            try {
-                                if (Files.isRegularFile(path)) {
-                                    String zipEntryName = "assets\\" + assetsPath.relativize(path);
-                                    zipOut.putNextEntry(new ZipEntry(zipEntryName));
-                                    Files.copy(path, zipOut);
-                                    zipOut.closeEntry();
-                                }
-                            } catch (IOException e) {
-                                throw new RuntimeException("Erreur lors de la compression du fichier " + path + ": " + e.getMessage(), e);
-                            }
-                        });
-                Path thumbnailPath = Path.of(Objects.requireNonNull(getClass().getResource("default_thumbnail.jpg")).toURI());
-                Path manifestPath = Path.of(Objects.requireNonNull(getClass().getResource("manifest.json")).toURI());
-                try (InputStream thumbnailInput = new FileInputStream(thumbnailPath.toFile());
-                     FileInputStream manifestInput = new FileInputStream(manifestPath.toFile())) {
-                    zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
-                    zipOut.write(thumbnailInput.readAllBytes());
-                    zipOut.closeEntry();
-                    zipOut.putNextEntry(new ZipEntry("manifest.json"));
-                    zipOut.write(manifestInput.readAllBytes());
-                    zipOut.closeEntry();
-                }
-
-            }
-            System.out.println("Dossier 'assets' compressé et enregistré dans '" + zipFilePath + "'.");
-
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la création du pack d'assets : " + e.getMessage());
-        }
     }
 
     public List<String> getInstalledPack() {

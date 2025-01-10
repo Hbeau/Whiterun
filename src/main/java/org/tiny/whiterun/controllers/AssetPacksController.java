@@ -43,7 +43,6 @@ public class AssetPacksController {
             watcherService.start();
         } catch (Exception e){
             log.error(e.getMessage());
-            System.err.println(e.getMessage());
         }
     }
     @FXML
@@ -73,17 +72,14 @@ public class AssetPacksController {
 
         expContent.add(textArea, 0, 1);
 
-// Set expandable Exception into the dialog pane.
         alert.getDialogPane().setExpandableContent(expContent);
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent()) {
             if (result.get() == ButtonType.OK) {
-                System.out.println("ok");
+                log.info("install the pack {}", selectedAsset);
                 ZipUtils.getInstance().installPack(selectedAsset);
                 GameDirManager.getInstance().registerInstallation(selectedAsset.toString());
-            } else {
-                System.out.println("no");
             }
         }
     }

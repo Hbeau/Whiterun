@@ -1,5 +1,8 @@
 package org.tiny.whiterun.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -8,11 +11,17 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Enumeration;
 import java.util.Objects;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import static org.tiny.whiterun.services.GameDirManager.ASSETS_PACK;
 
 public class ZipUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(ZipUtils.class);
 
     public static final String ASSETS_FOLDER = "assets";
     private static ZipUtils instance;
@@ -83,6 +92,57 @@ public class ZipUtils {
         }
 
         return treeBuilder.toString();
+    }
+
+    public void createAssetsPack(Path assetsPath) {
+        try {
+            Path assetsPackPath = Paths.get(GameDirManager.getInstance().getAssetPackFolder().getPath(), ASSETS_PACK);
+
+            if (!Files.isDirectory(assetsPath)) {
+                throw new FileNotFoundException("The 'assets' folder was not found in" + assetsPackPath + ".");
+            }
+
+            if (!Files.exists(assetsPackPath)) {
+                Files.createDirectories(assetsPackPath);
+                log.info("Folder 'assets-pack' has bean created in {}", assetsPackPath);
+            }
+
+            Path zipFilePath = assetsPackPath.resolve("default.zip");
+
+            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFilePath));
+                 Stream<Path> walk = Files.walk(assetsPath)) {
+                //Audio folder is removed because it's too large
+                walk
+                        .filter(path -> !path.toString().contains("audio"))
+                        .forEach(path -> {
+                            try {
+                                if (Files.isRegularFile(path)) {
+                                    String zipEntryName = "assets\\" + assetsPath.relativize(path);
+                                    zipOut.putNextEntry(new ZipEntry(zipEntryName));
+                                    Files.copy(path, zipOut);
+                                    zipOut.closeEntry();
+                                }
+                            } catch (IOException e) {
+                                throw new RuntimeException("Error while compressing the " + path + ": " + e.getMessage(), e);
+                            }
+                        });
+
+                try (InputStream thumbnailInput = getClass().getResourceAsStream("default_thumbnail.jpg");
+                     InputStream manifestInput = getClass().getResourceAsStream("manifest.json")) {
+                    if (Objects.nonNull(thumbnailInput) && Objects.nonNull(manifestInput)) {
+                        zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
+                        zipOut.write(thumbnailInput.readAllBytes());
+                        zipOut.closeEntry();
+                        zipOut.putNextEntry(new ZipEntry("manifest.json"));
+                        zipOut.write(manifestInput.readAllBytes());
+                        zipOut.closeEntry();
+                    }
+                }
+            }
+            log.info("'assets' folder compressed and saved in '{}'", zipFilePath);
+        } catch (Exception e) {
+            log.error("Error creating asset pack:", e);
+        }
     }
 
     public String extractManifest(Path zipFilePath) throws IOException {

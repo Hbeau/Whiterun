@@ -16,6 +16,8 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.models.PatchedEvent;
 import org.tiny.whiterun.services.GameDirManager;
 
@@ -24,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class ConfigController {
+
+    private static final Logger log = LoggerFactory.getLogger(ConfigController.class);
 
     public TextField pathField;
     public Pane config;
@@ -50,12 +54,13 @@ public class ConfigController {
 
         longRunningTask.setOnSucceeded(event -> {
             progressDialog.close();
-
+            log.info("Game Patched successfully!");
             showAlert("Success", "Game Patched successfully!");
             config.fireEvent(new PatchedEvent(OPTIONS_ALL));
         });
 
         longRunningTask.setOnFailed(event -> {
+            log.error("An error occurred while patching the game", longRunningTask.getException());
             progressDialog.close();
             showAlert("Error", "An error occurred: " + longRunningTask.getException().getMessage());
         });
