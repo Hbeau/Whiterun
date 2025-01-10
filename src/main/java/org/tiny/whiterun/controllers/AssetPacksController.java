@@ -49,6 +49,7 @@ public class AssetPacksController {
             });
             return packCell;
         });
+        assetsList.prefHeight(64);
     }
     public void watch() {
         try {

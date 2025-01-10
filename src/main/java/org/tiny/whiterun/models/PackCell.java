@@ -49,7 +49,9 @@ public class PackCell extends ListCell<AssetsPack> {
         if (empty || item == null) {
             setText(null);
             setGraphic(null);
+            setStyle("-fx-opacity : 0");
         } else {
+            setStyle("-fx-opacity : 1");
             if (doesContain(item)) {
                 content.setStyle("-fx-background-color: d1d1d1;");
                 installed.setText("installed");
