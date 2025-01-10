@@ -60,11 +60,7 @@ Feel free to submit pull requests, report bugs, or suggest features.
 ## 📥 Useful Links
 
 - [Download JRE 21+](https://adoptium.net/)
-- [Releases Page](https://github.com/Hbeau/TinyGlade-Blender-AddOn/releases)
+- [Releases Page](https://github.com/Hbeau/Whiterun/releases)
 - [TinyGlade Blender Add-On](https://github.com/Hbeau/TinyGlade-Blender-AddOn)
 
 ---
-
-## ⚡ Stay Connected
-
-For updates and support, follow this repository!  
