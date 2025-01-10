@@ -24,6 +24,7 @@ modify in-game models and textures effortlessly.
     - If successful, you will see the `default.zip` entry in the list.
 4. To add custom asset packages:
     - Open the `assets-pack` folder and paste your `.zip` files.
+    - you can get your first one here: [windmill.zip](https://raw.githubusercontent.com/Hbeau/Whiterun/refs/heads/main/windmill.zip)
     - Click on the desired zip file in the list.
     - Confirm the pop-up and start your game.
 
