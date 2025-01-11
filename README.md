@@ -1,7 +1,7 @@
 # Whiterun
 
 **Whiterun** is a desktop application designed to simplify the management of custom Tiny Glade assets, enabling you to
-modify in-game models and textures effortlessly.
+modify in-game models effortlessly.
 
 ---
 
