@@ -12,7 +12,7 @@ modify in-game models and textures effortlessly.
 1. Download the latest version of the JRE (Java Runtime Environment) [here](https://adoptium.net/) (version **21** or
    later).
 2. Download the Whiterun JAR executable from
-   the [Releases Page](https://github.com/Hbeau/TinyGlade-Blender-AddOn/releases).
+   the [Releases Page](https://github.com/Hbeau/whiterun/releases).
 
 ### Steps
 
