@@ -3,10 +3,10 @@ module org.tiny.whiterun {
     requires com.sun.jna;
     requires com.sun.jna.platform;
     requires javafx.fxml;
-    requires javafx.controls;
     requires org.apache.commons.io;
     requires java.desktop;
     requires org.slf4j;
+    requires atlantafx.base;
 
 
     opens org.tiny.whiterun to javafx.fxml;

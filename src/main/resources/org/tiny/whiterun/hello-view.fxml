@@ -2,7 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<VBox alignment="CENTER" spacing="20.0" style="-fx-background-image: url(background.jpg);"
+<VBox alignment="CENTER" spacing="20.0"
+      fx:id="main"
       xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx"
       fx:controller="org.tiny.whiterun.controllers.MainController">
     <AnchorPane>
@@ -13,13 +14,13 @@
             <AnchorPane.leftAnchor>0</AnchorPane.leftAnchor>
             <AnchorPane.rightAnchor>0</AnchorPane.rightAnchor>
 
-            <VBox fx:id="boxTop" style="-fx-background-color: rgba(255, 255, 255, 0.8); -fx-border-radius: 10; -fx-background-radius: 10;" VBox.vgrow="ALWAYS">
+            <VBox fx:id="boxTop" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets bottom="10"/>
                 </VBox.margin>
                 <fx:include fx:id="configPane" source="ConfigPane.fxml" />
             </VBox>
-            <VBox fx:id="boxBottom" style="-fx-background-color: rgba(255, 255, 255, 0.8); -fx-border-radius: 10; -fx-background-radius: 10;" VBox.vgrow="ALWAYS">
+            <VBox fx:id="boxBottom" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets top="10" />
                 </VBox.margin>

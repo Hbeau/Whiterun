@@ -2,6 +2,7 @@ package org.tiny.whiterun.controllers;
 
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import org.tiny.whiterun.services.GameDirManager;
 
 public class MainController {
@@ -11,9 +12,11 @@ public class MainController {
     public AssetPacksController assetPaneController;
     @FXML
     public ConfigController configPaneController;
+    public VBox boxTop;
 
     @FXML
     void initialize(){
+
         if(GameDirManager.getInstance().isPatched()) {
             assetPaneController.watch();
         }

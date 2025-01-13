@@ -1,5 +1,6 @@
 package org.tiny.whiterun.services;
 
+import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,6 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class ZipUtils {
@@ -37,42 +37,58 @@ public class ZipUtils {
     }
 
 
-    public void installPack(Path zipFilePath) throws IOException {
+    public Task<Void> installPack(Path zipFilePath) {
+        return new Task<>() {
+            @Override
+            protected Void call() {
+                log.info("Installing pack {} ", zipFilePath);
+                Path destDirPath = Paths.get(GameDirManager.getInstance().getGameRootPath()).resolve(ASSETS_FOLDER);
 
-        Path destDirPath = Paths.get(GameDirManager.getInstance().getGameRootPath()).resolve(ASSETS_FOLDER);
-        Path assetPackFile = GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath);
-        if (!Files.exists(destDirPath)) {
-            Files.createDirectories(destDirPath);
-        }
-
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(assetPackFile.toFile()))) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-
-                if (!entry.getName().startsWith(ASSETS_FOLDER)) {
-                    continue;
-                }
-
-                Path filePath = destDirPath.resolve(entry.getName().substring((ASSETS_FOLDER + "/").length()));
-
-                if (entry.isDirectory()) {
-                    if (!Files.exists(filePath)) {
-                        Files.createDirectories(filePath);
+                try (ZipFile assetPackFile = new ZipFile(GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
+                    if (!Files.exists(destDirPath)) {
+                        Files.createDirectories(destDirPath);
                     }
-                } else {
-                    Files.createDirectories(filePath.getParent());
+                    updateMessage("installing pack");
+                    Enumeration<? extends ZipEntry> zipEntries = assetPackFile.entries();
+                    int i = 0;
+                    updateProgress(i, assetPackFile.size());
+                    while (zipEntries.hasMoreElements()) {
+                        ZipEntry entry = zipEntries.nextElement();
+                        try (InputStream inputStream = new BufferedInputStream(assetPackFile.getInputStream(entry))) {
 
-                    try (OutputStream os = Files.newOutputStream(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
-                        while ((bytesRead = zis.read(buffer)) != -1) {
-                            os.write(buffer, 0, bytesRead);
+                            if (!entry.getName().startsWith(ASSETS_FOLDER)) {
+                                continue;
+                            }
+
+                            Path filePath = destDirPath.resolve(entry.getName().substring((ASSETS_FOLDER + "/").length()));
+
+                            if (entry.isDirectory()) {
+                                if (!Files.exists(filePath)) {
+                                    Files.createDirectories(filePath);
+                                }
+                            } else {
+                                Files.createDirectories(filePath.getParent());
+
+                                try (OutputStream os = Files.newOutputStream(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                                    byte[] buffer = new byte[4096];
+                                    int bytesRead;
+                                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                        os.write(buffer, 0, bytesRead);
+                                    }
+                                }
+                            }
                         }
+                        updateProgress(++i, assetPackFile.size());
                     }
+                    log.info("Installation complete");
+                    updateMessage("Installation complete");
+                    return null;
+                } catch (IOException e) {
+                    log.error("Error while decompressing the assets pack {} ", zipFilePath, e);
+                    throw new RuntimeException("Error while decompressing the assets pack : " + zipFilePath, e);
                 }
-                zis.closeEntry();
             }
-        }
+        };
     }
 
     public String listZipContentsAsTree(Path zipFilePath) throws IOException {

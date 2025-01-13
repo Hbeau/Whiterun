@@ -1,0 +1,23 @@
+#main{
+    -fx-background-image: url("images/background.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-position: center center;
+}
+#boxTop,#boxBottom {
+    -fx-background-color: rgba(255, 255, 255, 0.40); /* Semi-transparent background */
+    -fx-background-radius: 16px; /* Rounded corners */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 30, 0, 0, 4); /* Box shadow approximation */
+    -fx-border-color: rgba(255, 255, 255, 0.65); /* Border color */
+    -fx-border-radius: 16px; /* Match the border radius */
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-border-color : transparent;
+    -fx-margin-bottom: 4;
+}
+.list-view {
+    -fx-background-color: transparent;
+    -fx-padding : 0;
+    -fx-border-color : transparent;
+}

@@ -40,6 +40,7 @@ public class PackCell extends ListCell<AssetsPack> {
         HBox.setHgrow(textContainer, Priority.ALWAYS);
         content.setSpacing(10);
         content.setPadding(new Insets(5));
+
     }
 
     @Override
@@ -53,7 +54,7 @@ public class PackCell extends ListCell<AssetsPack> {
         } else {
             setStyle("-fx-opacity : 1");
             if (doesContain(item)) {
-                content.setStyle("-fx-background-color: d1d1d1;");
+                content.setStyle("-fx-background-color: rgba(240, 240, 250, 0.40)");
                 installed.setText("installed");
             }
             Image img = new Image(new ByteArrayInputStream(item.getImage()));

@@ -1,16 +1,21 @@
 package org.tiny.whiterun.controllers;
 
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.models.AssetsPack;
@@ -88,9 +93,69 @@ public class AssetPacksController {
         if (result.isPresent()) {
             if (result.get() == ButtonType.OK) {
                 log.info("install the pack {}", selectedAsset);
-                ZipUtils.getInstance().installPack(selectedAsset);
-                GameDirManager.getInstance().registerInstallation(selectedAsset.toString());
+                install(selectedAsset);
             }
         }
+    }
+
+    private void install(Path selectedAsset) {
+        Task<Void> voidTask = ZipUtils.getInstance().installPack(selectedAsset);
+        Stage progressDialog = createProgressDialog(voidTask);
+
+        new Thread(voidTask).start();
+
+        voidTask.setOnSucceeded(event -> {
+            progressDialog.close();
+            log.info("Asset pack installed successfully!");
+            showAlert("Success", "Asset pack installed successfully!");
+            GameDirManager.getInstance().registerInstallation(selectedAsset.toString());
+        });
+
+        voidTask.setOnFailed(event -> {
+            log.error("An error occurred while installing the pack", voidTask.getException());
+            progressDialog.close();
+            showAlert("Error", "An error occurred while installing the pack: " + voidTask.getException().getMessage());
+        });
+
+        voidTask.setOnCancelled(event -> progressDialog.close());
+
+        GameDirManager.getInstance().registerInstallation(selectedAsset.toString());
+    }
+
+    private Stage createProgressDialog(Task<?> task) {
+
+        Stage stage = new Stage(StageStyle.UNDECORATED);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Processing");
+
+        // Create the UI
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.autosize();
+        progressBar.progressProperty().bind(task.progressProperty());
+        progressBar.setMaxWidth(300);
+        Text progressText = new Text("Processing...");
+        progressText.textProperty().bind(task.messageProperty());
+
+        VBox layout = new VBox(10, progressText, progressBar);
+        layout.setFillWidth(true);
+        layout.setStyle("-fx-padding: 20; -fx-alignment: center; -fx-background-color: #f4f4f4; -fx-border-color: #ccc;");
+        Scene scene = new Scene(layout);
+
+        stage.setScene(scene);
+        stage.setWidth(300);
+        stage.setHeight(150);
+
+        stage.show();
+        return stage;
+    }
+
+    private void showAlert(String title, String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }

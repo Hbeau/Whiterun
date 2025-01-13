@@ -6,8 +6,6 @@
 <?import javafx.scene.layout.HBox?>
 <HBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.tiny.whiterun.controllers.AssetPacksController">
-    <ListView fx:id="assetsList" HBox.hgrow="ALWAYS"
-              style="-fx-background-color: none; -fx-border : none;-fx-radius : 10">
-
+    <ListView fx:id="assetsList" HBox.hgrow="ALWAYS">
     </ListView>
 </HBox>
