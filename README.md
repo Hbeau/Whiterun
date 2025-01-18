@@ -1,8 +1,6 @@
 # Whiterun
 
-**Whiterun** is a desktop application designed to simplify the management of custom Tiny Glade assets, enabling you to
-modify in-game models effortlessly.
-
+**Whiterun** is a desktop application designed to simplify the installation of custom Tiny Glade assets. Third-parties assets pack can be installed in one click to modify decorators, clutters, meshes, colors and more.
 ---
 
 ## 🔧 Setup Guide
@@ -34,12 +32,18 @@ modify in-game models effortlessly.
 
 1. **Base Your Assets on the Default Pack:**
     - Copy the `default.zip` file and remove any unmodified files.
-    - Add only the files you wish to change.
+    - **Add only the files you wish to change.**
 
 2. **Edit Models and Textures:**
     - Use the [TinyGlade Blender Add-On](https://github.com/Hbeau/TinyGlade-Blender-AddOn) to edit models.
-
-3. **Compress the Assets:**
+3. Don't forget to add a manifest.json with your assets data and a 200*200 thumbnail.jpg
+```json
+{
+  "name": "Default asset",
+  "description": "return to default look"
+}
+```
+5. **Compress the Assets:**
     - Ensure all files are zipped correctly to match the structure expected by Tiny Glade.
 
 ---
