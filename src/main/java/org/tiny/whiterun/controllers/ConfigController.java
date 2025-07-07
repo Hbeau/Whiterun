@@ -36,9 +36,11 @@ public class ConfigController {
     protected void onBrowseForRoot() {
         DirectoryChooser fileChooser = new DirectoryChooser();
         File file = fileChooser.showDialog(null);
-        GameDirManager instance = GameDirManager.getInstance();
-        instance.setGameRootPath(file);
-        pathField.setText(instance.getGameRootPath());
+        if (file != null) {
+            GameDirManager instance = GameDirManager.getInstance();
+            instance.setGameRootPath(file);
+            pathField.setText(instance.getGameRootPath());
+        }
     }
 
     @FXML
