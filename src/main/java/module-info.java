@@ -17,4 +17,5 @@ module org.tiny.whiterun {
     opens org.tiny.whiterun.services to javafx.fxml;
     exports org.tiny.whiterun.models;
     opens org.tiny.whiterun.models to javafx.fxml;
+    exports org.tiny.whiterun.exceptions;
 }

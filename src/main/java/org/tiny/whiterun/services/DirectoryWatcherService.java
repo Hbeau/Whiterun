@@ -8,10 +8,12 @@ import javafx.concurrent.Task;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tiny.whiterun.exceptions.CorruptedPackageException;
 import org.tiny.whiterun.models.AssetsPack;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Optional;
 
 public class DirectoryWatcherService extends Service<Void> {
 
@@ -45,14 +47,14 @@ public class DirectoryWatcherService extends Service<Void> {
     private void loadInitialFiles() {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directoryToWatch)) {
             for (Path path : stream) {
-                fileList.add(createAssetPack(path));
+                createAssetPack(path).ifPresent(fileList::add);
             }
         } catch (IOException e) {
             throw new RuntimeException("Error loading initial files: " + e.getMessage(), e);
         }
     }
 
-    private AssetsPack createAssetPack(Path path) {
+    private Optional<AssetsPack> createAssetPack(Path path) {
         try {
             Path fileName = path.getFileName();
             String s = ZipUtils.getInstance().extractManifest(fileName);
@@ -60,9 +62,9 @@ public class DirectoryWatcherService extends Service<Void> {
             JSONObject jsonObject = new JSONObject(s);
             String name = jsonObject.getString("name");
             String description = jsonObject.getString("description");
-            return new AssetsPack(name, description, thumbnail, fileName);
-        } catch (IOException e) {
-            return null;
+            return Optional.of(new AssetsPack(name, description, thumbnail, fileName));
+        } catch (CorruptedPackageException e) {
+            return Optional.empty();
         }
     }
 
@@ -171,9 +173,12 @@ public class DirectoryWatcherService extends Service<Void> {
 
                 Platform.runLater(() -> {
                         if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                            fileList.add(createAssetPack(fileName));
+                            createAssetPack(fileName).ifPresent(fileList::add);
                         } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-                            fileList.remove(createAssetPack(fileName));
+                            fileList.stream()
+                                    .filter(assetsPack -> assetsPack.getArchivePath().equals(fileName))
+                                    .findFirst()
+                                    .ifPresent(fileList::remove);
                         } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
                             updateMessage("File modified: " + fileName);
                         }

@@ -122,7 +122,7 @@ public class GameDirManager {
 
     private void cleanManifest() throws IOException {
 
-        Path manifestPath = Paths.get(gameRootPath.getPath(), "manifest.json");
+        Path manifestPath = Paths.get(gameRootPath.getPath(), "build-info/manifest.json");
 
         if (!Files.isRegularFile(manifestPath)) {
             throw new FileNotFoundException("The file 'manifest.json' was not found in the folder" + gameRootPath + ".");

@@ -3,6 +3,7 @@ package org.tiny.whiterun.services;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tiny.whiterun.exceptions.CorruptedPackageException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -159,46 +160,54 @@ public class ZipUtils {
         }
     }
 
-    public String extractManifest(Path zipFilePath) throws IOException {
-        File zipFile = GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath).toFile();
+    public String extractManifest(Path zipFilePath) throws CorruptedPackageException {
+        try {
+            File zipFile = GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath).toFile();
 
-        if (!zipFile.exists() || !zipFile.isFile()) {
-            throw new IllegalArgumentException("The provided ZIP file path is invalid: " + zipFilePath);
-        }
-
-        try (ZipFile zip = new ZipFile(zipFile)) {
-            ZipEntry manifestEntry = zip.getEntry("manifest.json");
-
-            if (manifestEntry == null) {
-                throw new IllegalArgumentException("The manifest.json file was not found in the ZIP file.");
+            if (!zipFile.exists() || !zipFile.isFile()) {
+                throw new CorruptedPackageException("The provided ZIP file path is invalid: " + zipFilePath);
             }
 
-            try (InputStream inputStream = zip.getInputStream(manifestEntry)) {
-                return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            try (ZipFile zip = new ZipFile(zipFile)) {
+                ZipEntry manifestEntry = zip.getEntry("manifest.json");
+
+                if (manifestEntry == null) {
+                    throw new CorruptedPackageException("The manifest.json file was not found in the ZIP file.");
+                }
+
+                try (InputStream inputStream = zip.getInputStream(manifestEntry)) {
+                    return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                }
             }
+        } catch (IOException e) {
+            throw new CorruptedPackageException(e.getMessage());
         }
     }
 
-    public byte[] extractThumbnail(Path zipFilePath) throws IOException {
-        File zipFile = GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath).toFile();
+    public byte[] extractThumbnail(Path zipFilePath) throws CorruptedPackageException {
+        try {
+            File zipFile = GameDirManager.getInstance().getAssetPackFolder().toPath().resolve(zipFilePath).toFile();
 
-        if (!zipFile.exists() || !zipFile.isFile()) {
-            throw new IllegalArgumentException("The provided ZIP file path is invalid: " + zipFilePath);
-        }
+            if (!zipFile.exists() || !zipFile.isFile()) {
+                throw new CorruptedPackageException("The provided ZIP file path is invalid: " + zipFilePath);
+            }
 
-        try (ZipFile zip = new ZipFile(zipFile)) {
-            ZipEntry thumbnailImage = zip.getEntry("thumbnail.jpg");
+            try (ZipFile zip = new ZipFile(zipFile)) {
+                ZipEntry thumbnailImage = zip.getEntry("thumbnail.jpg");
 
-            if (thumbnailImage == null) {
-                try (FileInputStream fileInputStream = new FileInputStream(Objects.requireNonNull(getClass()
-                        .getResource("no_thumbnail.jpg")).getFile())) {
-                    return fileInputStream.readAllBytes();
+                if (thumbnailImage == null) {
+                    try (FileInputStream fileInputStream = new FileInputStream(Objects.requireNonNull(getClass()
+                            .getResource("no_thumbnail.jpg")).getFile())) {
+                        return fileInputStream.readAllBytes();
+                    }
+                }
+
+                try (InputStream inputStream = zip.getInputStream(thumbnailImage)) {
+                    return inputStream.readAllBytes();
                 }
             }
-
-            try (InputStream inputStream = zip.getInputStream(thumbnailImage)) {
-                return inputStream.readAllBytes();
-            }
+        } catch (IOException e) {
+            throw new CorruptedPackageException(e.getMessage());
         }
     }
 }
