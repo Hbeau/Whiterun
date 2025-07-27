@@ -1,15 +1,18 @@
 package org.tiny.whiterun.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.exceptions.CorruptedPackageException;
 import org.tiny.whiterun.models.AssetsPack;
+import org.tiny.whiterun.models.PackDescriptor;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -21,6 +24,7 @@ public class DirectoryWatcherService extends Service<Void> {
 
     // Path to the directory being watched
     private final Path directoryToWatch;
+    private final ObjectMapper objectMapper;
 
     // Observable list to store the directory's files
     private final ObservableList<AssetsPack> fileList;
@@ -32,6 +36,8 @@ public class DirectoryWatcherService extends Service<Void> {
      */
     public DirectoryWatcherService(String directoryPath) {
         this.directoryToWatch = Paths.get(directoryPath);
+        this.objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         if (!Files.isDirectory(this.directoryToWatch)) {
             throw new IllegalArgumentException("Invalid directory: " + directoryPath);
@@ -59,11 +65,11 @@ public class DirectoryWatcherService extends Service<Void> {
             Path fileName = path.getFileName();
             String s = ZipUtils.getInstance().extractManifest(fileName);
             byte[] thumbnail = ZipUtils.getInstance().extractThumbnail(fileName);
-            JSONObject jsonObject = new JSONObject(s);
-            String name = jsonObject.getString("name");
-            String description = jsonObject.getString("description");
-            return Optional.of(new AssetsPack(name, description, thumbnail, fileName));
-        } catch (CorruptedPackageException e) {
+            PackDescriptor packDescriptor = objectMapper.readValue(s, PackDescriptor.class);
+            log.info("load pack {}", packDescriptor);
+            return Optional.of(new AssetsPack(packDescriptor, path.getFileName(), thumbnail));
+        } catch (CorruptedPackageException | JsonProcessingException e) {
+            log.warn("Failed to load pack {}", path.getFileName(), e);
             return Optional.empty();
         }
     }
@@ -176,7 +182,7 @@ public class DirectoryWatcherService extends Service<Void> {
                             createAssetPack(fileName).ifPresent(fileList::add);
                         } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
                             fileList.stream()
-                                    .filter(assetsPack -> assetsPack.getArchivePath().equals(fileName))
+                                    .filter(packDescriptor -> packDescriptor.archivePath().equals(fileName))
                                     .findFirst()
                                     .ifPresent(fileList::remove);
                         } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {

@@ -8,7 +8,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import org.tiny.whiterun.services.GameDirManager;
 
 import java.io.ByteArrayInputStream;
 
@@ -53,20 +52,23 @@ public class PackCell extends ListCell<AssetsPack> {
             setStyle("-fx-opacity : 0");
         } else {
             setStyle("-fx-opacity : 1");
-            if (doesContain(item)) {
-                content.setStyle("-fx-background-color: rgba(240, 240, 250, 0.40)");
-                installed.setText("installed");
+            switch (item.checkInstallation()) {
+                case INSTALLED -> {
+                    content.setStyle("-fx-background-color: rgba(240, 240, 250, 0.40)");
+                    installed.setText("installed");
+                }
+                case COVERED -> {
+                    content.setStyle("-fx-background-color: rgba(240, 170, 110, 0.40)");
+                    installed.setText("Installation error");
+                }
             }
-            Image img = new Image(new ByteArrayInputStream(item.getImage()));
+            Image img = new Image(new ByteArrayInputStream(item.image()));
             thumbnail.setImage(img);
-            title.setText(item.getName());
-            subtitle.setText(item.getDescription());
+            title.setText(item.packDescriptor().name());
+            subtitle.setText(item.packDescriptor().description());
             setGraphic(content);
         }
     }
 
 
-    private static boolean doesContain(AssetsPack item) {
-        return GameDirManager.getInstance().getInstalledPack().contains(item.getArchivePath().toString());
-    }
 }

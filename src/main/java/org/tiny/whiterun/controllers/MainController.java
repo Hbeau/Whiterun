@@ -5,6 +5,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import org.tiny.whiterun.services.GameDirManager;
 
+import java.nio.file.Files;
+
 public class MainController {
 
     public Pane configPane;
@@ -17,13 +19,15 @@ public class MainController {
     @FXML
     void initialize(){
 
-        if(GameDirManager.getInstance().isPatched()) {
+        enableWatcher();
+        configPane.addEventHandler(ConfigController.OPTIONS_ALL, patchedEvent -> {
+            enableWatcher();
+        });
+    }
+
+    private void enableWatcher() {
+        if (Files.exists(GameDirManager.getInstance().getAssetPackFolderPath())) {
             assetPaneController.watch();
         }
-        configPane.addEventHandler(ConfigController.OPTIONS_ALL, patchedEvent -> {
-            if(GameDirManager.getInstance().isPatched()) {
-                assetPaneController.watch();
-            }
-        });
     }
 }

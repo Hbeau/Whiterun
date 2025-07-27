@@ -73,7 +73,7 @@ public class ConfigController {
     @FXML
     protected void onAddAssetsPackClicked() throws IOException {
         GameDirManager instance = GameDirManager.getInstance();
-        Desktop.getDesktop().open(instance.getAssetPackFolder());
+        Desktop.getDesktop().open(instance.getOrCreateAssetPackFolder());
     }
 
     private Stage createProgressDialog(Task<?> task) {
