@@ -13,6 +13,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -28,8 +29,11 @@ import org.tiny.whiterun.services.ZipUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+
+import static org.tiny.whiterun.services.ZipUtils.ASSETS_FOLDER;
 
 
 public class AssetPacksController {
@@ -117,18 +121,27 @@ public class AssetPacksController {
             }
 
         }
-        TextArea textArea = new TextArea(ZipUtils.getInstance().listZipContentsAsTree(selectedAsset.archivePath()));
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
+        TextFlow textFlow = new TextFlow();
+        String zipContents = ZipUtils.getInstance().listZipContentsAsTree(selectedAsset.archivePath());
+        Map<String, Boolean> installationDetails = GameDirManager.getInstance().getInstallationDetails(selectedAsset);
+        for (String line : zipContents.split("\\r?\\n")) {
+            String customAssetPath = line.substring((ASSETS_FOLDER + "/").length());
+            Text e = new Text(customAssetPath + "\n");
+            if (!installationDetails.getOrDefault(customAssetPath, true)) {
+                e.setStyle("-fx-fill: #f0ad4e;");
+            }
+            textFlow.getChildren().add(e);
 
-        textArea.setMaxWidth(Double.MAX_VALUE);
-        textArea.setMaxHeight(Double.MAX_VALUE);
-        GridPane.setVgrow(textArea, Priority.ALWAYS);
-        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        }
+
+        textFlow.setMaxWidth(Double.MAX_VALUE);
+        textFlow.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textFlow, Priority.ALWAYS);
+        GridPane.setHgrow(textFlow, Priority.ALWAYS);
         GridPane expContent = new GridPane();
         expContent.setMaxWidth(Double.MAX_VALUE);
 
-        expContent.add(textArea, 0, 1);
+        expContent.add(textFlow, 0, 1);
         alert.getDialogPane().setExpandableContent(expContent);
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent()) {
@@ -170,6 +183,24 @@ public class AssetPacksController {
     }
 
     private void uninstall(AssetsPack assetsPack) {
+        Task<Void> uninstallTask = ZipUtils.getInstance().uninstallPack(assetsPack);
+        Stage progressDialog = createProgressDialog(uninstallTask);
+
+        new Thread(uninstallTask).start();
+
+        uninstallTask.setOnSucceeded(event -> {
+            progressDialog.close();
+            log.info("Asset pack uninstalled successfully!");
+            showAlert("Success", "Asset pack uninstalled successfully!");
+        });
+
+        uninstallTask.setOnFailed(event -> {
+            log.error("An error occurred while uninstalling the pack", uninstallTask.getException());
+            progressDialog.close();
+            showAlert("Error", "An error occurred while uninstalling the pack: " + uninstallTask.getException().getMessage());
+        });
+
+        uninstallTask.setOnCancelled(event -> progressDialog.close());
 
     }
 

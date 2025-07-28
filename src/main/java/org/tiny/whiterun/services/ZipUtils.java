@@ -2,9 +2,11 @@ package org.tiny.whiterun.services;
 
 import javafx.concurrent.Task;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.exceptions.CorruptedPackageException;
+import org.tiny.whiterun.models.AssetsPack;
 import org.tiny.whiterun.models.InstalledPack;
 
 import java.io.*;
@@ -22,6 +24,8 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class ZipUtils {
 
@@ -234,5 +238,34 @@ public class ZipUtils {
             log.warn("cannot read file checksum", e);
             return "";
         }
+    }
+
+    public Task<Void> uninstallPack(AssetsPack assetsPack) {
+        return new Task<>() {
+            @Override
+            protected Void call() {
+                log.info("Uninstalling pack {}", assetsPack.archivePath());
+                Path sourceDirPath = GameDirManager.getInstance().getUserPrefsFolder().resolve("assets_backup");
+                Path destDirPath = Paths.get(GameDirManager.getInstance().getGameRootPath()).resolve(ASSETS_FOLDER);
+                try {
+                    updateMessage("Uninstalling pack");
+                    Map<String, Boolean> fileWithChecksum = GameDirManager.getInstance().getInstallationDetails(assetsPack);
+                    for (Map.Entry<String, Boolean> entry : fileWithChecksum.entrySet()) {
+                        if (entry.getValue()) {
+                            File srcFile = sourceDirPath.resolve(entry.getKey()).toFile();
+                            File destFile = destDirPath.resolve(entry.getKey()).toFile();
+                            FileUtils.copyFile(srcFile, destFile, REPLACE_EXISTING);
+                        }
+                    }
+                    GameDirManager.getInstance().unregisterInstallation(assetsPack);
+                    log.info("Uninstallation complete");
+                    updateMessage("Uninstallation complete");
+                } catch (IOException e) {
+                    log.error("Error while uninstalling the assets pack {}", assetsPack.archivePath(), e);
+                    throw new RuntimeException("Error while uninstalling the assets pack: " + assetsPack.archivePath(), e);
+                }
+                return null;
+            }
+        };
     }
 }

@@ -29,6 +29,10 @@ public class GameDirManager {
 
     private final Properties properties;
 
+    public Path getUserPrefsFolder() {
+        return userPrefsFolder;
+    }
+
     private final Path userPrefsFolder;
     private final Path settings;
 
@@ -134,23 +138,35 @@ public class GameDirManager {
     }
 
     public PackState checkPackInstallation(AssetsPack pack) {
-        PacksWrapper packsWrapper = null;
+        Optional<InstalledPack> packOptional = getInstalledPack(pack);
+        if (packOptional.isEmpty()) {
+            return PackState.NOT_INSTALLED;
+        }
+        Map<String, Boolean> fileWithChecksum = ZipUtils.getInstance().checkInstallation(packOptional.get().entries());
+        log.info("some file are moved {}", fileWithChecksum.entrySet().stream().filter(stringBooleanEntry -> !stringBooleanEntry.getValue()).map(Map.Entry::getKey).toList());
+        if (fileWithChecksum.containsValue(false)) {
+            return PackState.COVERED;
+        }
+        return PackState.INSTALLED;
+    }
+
+    public Map<String, Boolean> getInstallationDetails(AssetsPack pack) {
+        Optional<InstalledPack> packOptional = getInstalledPack(pack);
+        if (packOptional.isEmpty()) {
+            return Map.of();
+        }
+        return ZipUtils.getInstance().checkInstallation(packOptional.get().entries());
+    }
+
+    private Optional<InstalledPack> getInstalledPack(AssetsPack pack) {
+        PacksWrapper packsWrapper;
         try {
             packsWrapper = getOrCreatePacks();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Optional<InstalledPack> first = packsWrapper.packs().stream()
+        return packsWrapper.packs().stream()
                 .filter(installedPack -> installedPack.name().equals(pack.archivePath().getFileName().toString())).findFirst();
-        if (first.isEmpty()) {
-            return PackState.NOT_INSTALLED;
-        }
-        Map<String, Boolean> stringBooleanMap = ZipUtils.getInstance().checkInstallation(first.get().entries());
-        log.info("some file are moved {}", stringBooleanMap.entrySet().stream().filter(stringBooleanEntry -> !stringBooleanEntry.getValue()).map(Map.Entry::getKey).toList());
-        if (stringBooleanMap.containsValue(false)) {
-            return PackState.COVERED;
-        }
-        return PackState.INSTALLED;
     }
 
     public void registerInstallation(InstalledPack pack) throws IOException {
@@ -166,7 +182,14 @@ public class GameDirManager {
         objectMapper.writeValue(path.toFile(), packsWrapper);
     }
 
-    private PacksWrapper getOrCreatePacks() throws IOException {
+    public void unregisterInstallation(AssetsPack pack) throws IOException {
+        PacksWrapper packsWrapper = getOrCreatePacks();
+        packsWrapper.packs().removeIf(installedPack -> installedPack.name().equals(pack.archivePath().getFileName().toString()));
+        Path path = userPrefsFolder.resolve("installation.json");
+        objectMapper.writeValue(path.toFile(), packsWrapper);
+    }
+
+    public PacksWrapper getOrCreatePacks() throws IOException {
         Path path = userPrefsFolder.resolve("installation.json");
         if (!Files.exists(path)) {
             Files.createFile(path);
