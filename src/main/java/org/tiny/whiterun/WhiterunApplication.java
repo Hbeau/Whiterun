@@ -4,6 +4,7 @@ import atlantafx.base.theme.PrimerLight;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ public class WhiterunApplication extends Application {
         stage.setTitle("Whiterun");
         stage.setScene(scene);
         stage.setResizable(false);
+        stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResource("images/windmill_icon.png")).toExternalForm()));
         stage.show();
     }
 
