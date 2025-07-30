@@ -168,6 +168,7 @@ public class AssetPacksController {
             showAlert("Success", "Asset pack installed successfully!");
             try {
                 GameDirManager.getInstance().registerInstallation(installedPackTask.get());
+                assetsList.refresh();
             } catch (InterruptedException | ExecutionException | IOException e) {
                 throw new RuntimeException(e);
             }

@@ -45,13 +45,14 @@ public class PackCell extends ListCell<AssetsPack> {
     @Override
     protected void updateItem(AssetsPack item, boolean empty) {
         super.updateItem(item, empty);
-
+        setStyle("");
         if (empty || item == null) {
             setText(null);
             setGraphic(null);
             setStyle("-fx-opacity : 0");
         } else {
             setStyle("-fx-opacity : 1");
+            content.setStyle("");
             switch (item.checkInstallation()) {
                 case INSTALLED -> {
                     content.setStyle("-fx-background-color: rgba(240, 240, 250, 0.40)");
