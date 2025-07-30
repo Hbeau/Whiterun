@@ -19,6 +19,7 @@ import javafx.stage.StageStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.models.PatchedEvent;
+import org.tiny.whiterun.services.GameAssetsService;
 import org.tiny.whiterun.services.GameDirManager;
 
 import java.awt.*;
@@ -32,21 +33,27 @@ public class ConfigController {
     public TextField pathField;
     public Pane config;
     public static EventType<PatchedEvent> OPTIONS_ALL = new EventType<>("OPTIONS_ALL");
+
+    @FXML
+    void initialize() {
+        pathField.setText(GameDirManager.getInstance().getGameDirectories().getGameRootPath());
+    }
+
     @FXML
     protected void onBrowseForRoot() {
         DirectoryChooser fileChooser = new DirectoryChooser();
         File file = fileChooser.showDialog(null);
         if (file != null) {
             GameDirManager instance = GameDirManager.getInstance();
-            instance.setGameRootPath(file);
-            pathField.setText(instance.getGameRootPath());
+            instance.setGameRootPath(file.toPath());
+            pathField.setText(instance.getGameDirectories().getGameRootPath());
         }
     }
 
     @FXML
-    protected void onPatchGameClicked(){
+    protected void onPatchGameClicked() {
 
-        GameDirManager instance = GameDirManager.getInstance();
+        GameAssetsService instance = GameAssetsService.getInstance();
 
         Task<Void> longRunningTask = instance.patchGame();
 
@@ -70,10 +77,11 @@ public class ConfigController {
         longRunningTask.setOnCancelled(event -> progressDialog.close());
 
     }
+
     @FXML
     protected void onAddAssetsPackClicked() throws IOException {
         GameDirManager instance = GameDirManager.getInstance();
-        Desktop.getDesktop().open(instance.getOrCreateAssetPackFolder());
+        Desktop.getDesktop().open(instance.getGameDirectories().getOrCreateAssetPackFolder());
     }
 
     private Stage createProgressDialog(Task<?> task) {

@@ -5,6 +5,7 @@ import com.sun.jna.platform.win32.WinReg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 
@@ -16,7 +17,7 @@ public class InstallationFinder {
     public static final String TINY_GLADE = "Tiny Glade";
     public static final String DISPLAY_NAME = "DisplayName";
 
-    public Optional<String> findGameFolder(){
+    public Optional<Path> findGameFolder() {
         try {
             String[] subKeys = Advapi32Util.registryGetKeys(WinReg.HKEY_LOCAL_MACHINE, REGISTRY_PATH);
 
@@ -28,7 +29,8 @@ public class InstallationFinder {
 
                     if (TINY_GLADE.equalsIgnoreCase(displayName)) {
                         if (Advapi32Util.registryValueExists(WinReg.HKEY_LOCAL_MACHINE, fullPath, "InstallLocation")) {
-                            return Optional.of(Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, fullPath, "InstallLocation"));
+                            String pathText = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, fullPath, "InstallLocation");
+                            return Optional.of(Path.of(pathText));
                         }
                     }
                 }

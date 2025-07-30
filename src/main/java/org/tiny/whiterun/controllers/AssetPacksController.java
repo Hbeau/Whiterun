@@ -25,6 +25,7 @@ import org.tiny.whiterun.models.PackCell;
 import org.tiny.whiterun.models.PackState;
 import org.tiny.whiterun.services.DirectoryWatcherService;
 import org.tiny.whiterun.services.GameDirManager;
+import org.tiny.whiterun.services.InstalledPacksService;
 import org.tiny.whiterun.services.ZipUtils;
 
 import java.io.IOException;
@@ -69,7 +70,7 @@ public class AssetPacksController {
     public void watch() {
         if (watcherService == null) {
             try {
-                watcherService = new DirectoryWatcherService(GameDirManager.getInstance().getOrCreateAssetPackFolder().getPath());
+                watcherService = new DirectoryWatcherService(GameDirManager.getInstance().getGameDirectories().getOrCreateAssetPackFolder().getPath());
                 ObservableList<AssetsPack> fileList = watcherService.getFileList();
                 assetsList.setItems(fileList);
                 watcherService.start();
@@ -123,7 +124,7 @@ public class AssetPacksController {
         }
         TextFlow textFlow = new TextFlow();
         String zipContents = ZipUtils.getInstance().listZipContentsAsTree(selectedAsset.archivePath());
-        Map<String, Boolean> installationDetails = GameDirManager.getInstance().getInstallationDetails(selectedAsset);
+        Map<String, Boolean> installationDetails = InstalledPacksService.getInstance().getInstallationDetails(selectedAsset);
         for (String line : zipContents.split("\\r?\\n")) {
             String customAssetPath = line.substring((ASSETS_FOLDER + "/").length());
             Text e = new Text(customAssetPath + "\n");
@@ -167,7 +168,7 @@ public class AssetPacksController {
             log.info("Asset pack installed successfully!");
             showAlert("Success", "Asset pack installed successfully!");
             try {
-                GameDirManager.getInstance().registerInstallation(installedPackTask.get());
+                InstalledPacksService.getInstance().registerInstallation(installedPackTask.get());
                 assetsList.refresh();
             } catch (InterruptedException | ExecutionException | IOException e) {
                 throw new RuntimeException(e);
@@ -192,6 +193,7 @@ public class AssetPacksController {
         uninstallTask.setOnSucceeded(event -> {
             progressDialog.close();
             log.info("Asset pack uninstalled successfully!");
+            assetsList.refresh();
             showAlert("Success", "Asset pack uninstalled successfully!");
         });
 

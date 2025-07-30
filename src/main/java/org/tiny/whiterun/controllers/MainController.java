@@ -20,13 +20,13 @@ public class MainController {
     void initialize(){
 
         enableWatcher();
-        configPane.addEventHandler(ConfigController.OPTIONS_ALL, patchedEvent -> {
-            enableWatcher();
-        });
+        configPane.addEventHandler(ConfigController.OPTIONS_ALL, patchedEvent ->
+                enableWatcher()
+        );
     }
 
     private void enableWatcher() {
-        if (Files.exists(GameDirManager.getInstance().getAssetPackFolderPath())) {
+        if (Files.exists(GameDirManager.getInstance().getGameDirectories().getAssetPackFolderPath())) {
             assetPaneController.watch();
         }
     }

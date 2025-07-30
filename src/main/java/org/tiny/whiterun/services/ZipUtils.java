@@ -13,7 +13,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -33,15 +32,20 @@ public class ZipUtils {
 
     public static final String ASSETS_FOLDER = "assets";
     private static ZipUtils instance;
+    private final GameDirectories gameDirectories;
+    private final InstalledPacksService installedPacksService;
+    private final UserPreferencesService userPreferencesService = UserPreferencesService.getInstance();
 
-    private ZipUtils() {
-
+    private ZipUtils(GameDirectories gameDirectories, InstalledPacksService installedPacksService) {
+        this.gameDirectories = gameDirectories;
+        this.installedPacksService = installedPacksService;
     }
 
 
     public static synchronized ZipUtils getInstance() {
         if (instance == null) {
-            instance = new ZipUtils();
+            instance = new ZipUtils(GameDirManager.getInstance().getGameDirectories(),
+                    InstalledPacksService.getInstance());
         }
         return instance;
     }
@@ -52,9 +56,9 @@ public class ZipUtils {
             @Override
             protected InstalledPack call() {
                 log.info("Installing pack {} ", zipFilePath);
-                Path destDirPath = Paths.get(GameDirManager.getInstance().getGameRootPath()).resolve(ASSETS_FOLDER);
+                Path destDirPath = gameDirectories.getAssetFolderPath();
                 Map<String, String> installationVerification = new HashMap<>();
-                try (ZipFile assetPackFile = new ZipFile(GameDirManager.getInstance().getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
+                try (ZipFile assetPackFile = new ZipFile(gameDirectories.getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
                     if (!Files.exists(destDirPath)) {
                         Files.createDirectories(destDirPath);
                     }
@@ -109,7 +113,7 @@ public class ZipUtils {
 
     public String listZipContentsAsTree(Path zipFilePath) throws IOException {
         StringBuilder treeBuilder = new StringBuilder();
-        try (ZipFile zipFile = new ZipFile(GameDirManager.getInstance().getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
+        try (ZipFile zipFile = new ZipFile(gameDirectories.getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
@@ -126,7 +130,7 @@ public class ZipUtils {
 
     public void createAssetsPack(Path assetsPath) {
         try {
-            Path assetsPackPath = GameDirManager.getInstance().getOrCreateAssetPackFolder().toPath();
+            Path assetsPackPath = gameDirectories.getOrCreateAssetPackFolder().toPath();
 
             if (!Files.isDirectory(assetsPath)) {
                 throw new FileNotFoundException("The 'assets' folder was not found in" + assetsPackPath + ".");
@@ -172,7 +176,7 @@ public class ZipUtils {
 
     public String extractManifest(Path zipFilePath) throws CorruptedPackageException {
         try {
-            File zipFile = GameDirManager.getInstance().getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile();
+            File zipFile = gameDirectories.getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile();
 
             if (!zipFile.exists() || !zipFile.isFile()) {
                 throw new CorruptedPackageException("The provided ZIP file path is invalid: " + zipFilePath);
@@ -196,7 +200,7 @@ public class ZipUtils {
 
     public byte[] extractThumbnail(Path zipFilePath) throws CorruptedPackageException {
         try {
-            File zipFile = GameDirManager.getInstance().getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile();
+            File zipFile = gameDirectories.getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile();
 
             if (!zipFile.exists() || !zipFile.isFile()) {
                 throw new CorruptedPackageException("The provided ZIP file path is invalid: " + zipFilePath);
@@ -224,7 +228,7 @@ public class ZipUtils {
     public Map<String, Boolean> checkInstallation(Map<String, String> filesWithChecksum) {
         return filesWithChecksum.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, fileWithChecksum -> {
-                    Path path = GameDirManager.getInstance().getAssetFolderPath().resolve(fileWithChecksum.getKey());
+                    Path path = gameDirectories.getAssetFolderPath().resolve(fileWithChecksum.getKey());
                     return Files.exists(path) &&
                             fileWithChecksum.getValue().equals(getFileChecksum(path.toFile()));
                 }));
@@ -245,11 +249,11 @@ public class ZipUtils {
             @Override
             protected Void call() {
                 log.info("Uninstalling pack {}", assetsPack.archivePath());
-                Path sourceDirPath = GameDirManager.getInstance().getUserPrefsFolder().resolve("assets_backup");
-                Path destDirPath = Paths.get(GameDirManager.getInstance().getGameRootPath()).resolve(ASSETS_FOLDER);
+                Path sourceDirPath = userPreferencesService.getGameBackupFolder();
+                Path destDirPath = gameDirectories.getAssetFolderPath();
                 try {
                     updateMessage("Uninstalling pack");
-                    Map<String, Boolean> fileWithChecksum = GameDirManager.getInstance().getInstallationDetails(assetsPack);
+                    Map<String, Boolean> fileWithChecksum = installedPacksService.getInstallationDetails(assetsPack);
                     for (Map.Entry<String, Boolean> entry : fileWithChecksum.entrySet()) {
                         if (entry.getValue()) {
                             File srcFile = sourceDirPath.resolve(entry.getKey()).toFile();
@@ -257,7 +261,7 @@ public class ZipUtils {
                             FileUtils.copyFile(srcFile, destFile, REPLACE_EXISTING);
                         }
                     }
-                    GameDirManager.getInstance().unregisterInstallation(assetsPack);
+                    installedPacksService.unregisterInstallation(assetsPack);
                     log.info("Uninstallation complete");
                     updateMessage("Uninstallation complete");
                 } catch (IOException e) {

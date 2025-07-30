@@ -5,8 +5,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.tiny.whiterun.controllers.MainController;
-import org.tiny.whiterun.services.GameDirManager;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -25,10 +23,6 @@ public class WhiterunApplication extends Application {
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
-
-        MainController controller = fxmlLoader.getController();
-
-        controller.configPaneController.pathField.setText(GameDirManager.getInstance().getGameRootPath());
     }
 
     public static void main(String[] args) {
