@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +51,10 @@ public class GameAssetsService {
                         updateMessage("Game assets folder does not exist: " + sourceAssets);
                         throw new RuntimeException("Game assets folder does not exist: " + sourceAssets);
                     }
-                    FileUtils.copyDirectory(sourceAssets.toFile(), assetsBackup.toFile());
+
+                    FileFilter filter = file -> !file.getPath().contains("audio");
+
+                    FileUtils.copyDirectory(sourceAssets.toFile(), assetsBackup.toFile(), filter);
                     log.info("patch complete");
                     updateMessage("Finished");
                     Thread.sleep(500);
