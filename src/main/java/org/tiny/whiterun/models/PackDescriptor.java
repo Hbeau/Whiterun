@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 import java.util.List;
 
-public record PackDescriptor(String name, String description, int version, String[] authors,
+public record PackDescriptor(String name, String description, int version,@JsonSetter(nulls = Nulls.AS_EMPTY) String[] authors,
                              @JsonSetter(nulls = Nulls.AS_EMPTY)
                              List<AssetFileEntry> entries) {
 }

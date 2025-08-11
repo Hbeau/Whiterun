@@ -94,7 +94,7 @@ public class ConfigController {
         ProgressBar progressBar = new ProgressBar();
         progressBar.autosize();
         progressBar.progressProperty().bind(task.progressProperty());
-        progressBar.setMaxWidth(300);
+        progressBar.setMaxWidth(350);
         Text progressText = new Text("Processing...");
         progressText.textProperty().bind(task.messageProperty());
 

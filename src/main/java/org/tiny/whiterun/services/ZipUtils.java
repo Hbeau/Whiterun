@@ -25,12 +25,13 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.tiny.whiterun.services.GameDirectories.ASSETS;
+import static org.tiny.whiterun.services.GameDirectories.COMPILED_ASSETS;
 
 public class ZipUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ZipUtils.class);
 
-    public static final String ASSETS_FOLDER = "assets";
     private static ZipUtils instance;
     private final GameDirectories gameDirectories;
     private final InstalledPacksService installedPacksService;
@@ -56,7 +57,7 @@ public class ZipUtils {
             @Override
             protected InstalledPack call() {
                 log.info("Installing pack {} ", zipFilePath);
-                Path destDirPath = gameDirectories.getAssetFolderPath();
+                Path destDirPath = Path.of(gameDirectories.getGameRootPath());
                 Map<String, String> installationVerification = new HashMap<>();
                 try (ZipFile assetPackFile = new ZipFile(gameDirectories.getOrCreateAssetPackFolder().toPath().resolve(zipFilePath).toFile())) {
                     if (!Files.exists(destDirPath)) {
@@ -67,23 +68,7 @@ public class ZipUtils {
                     int i = 0;
                     updateProgress(i, assetPackFile.size());
                     while (zipEntries.hasMoreElements()) {
-                        ZipEntry entry = zipEntries.nextElement();
-                        if (!entry.getName().startsWith(ASSETS_FOLDER)) {
-                            continue;
-                        }
-                        String customAssetPath = entry.getName().substring((ASSETS_FOLDER + "/").length());
-                        Path filePath = destDirPath.resolve(customAssetPath);
-
-                            if (entry.isDirectory()) {
-                                if (!Files.exists(filePath)) {
-                                    Files.createDirectories(filePath);
-                                }
-                            } else {
-                                Files.createDirectories(filePath.getParent());
-                                replaceFileInAssets(assetPackFile, entry, filePath);
-                                String fileChecksum = getFileChecksum(filePath.toFile());
-                                installationVerification.put(customAssetPath, fileChecksum);
-                            }
+                        if (extractFile(destDirPath, installationVerification, assetPackFile, zipEntries)) continue;
                         updateProgress(++i, assetPackFile.size());
                     }
 
@@ -96,6 +81,27 @@ public class ZipUtils {
                 }
             }
         };
+    }
+
+    private boolean extractFile(Path destDirPath, Map<String, String> installationVerification, ZipFile assetPackFile, Enumeration<? extends ZipEntry> zipEntries) throws IOException {
+        ZipEntry entry = zipEntries.nextElement();
+        if (!(entry.getName().startsWith(ASSETS) || entry.getName().startsWith(COMPILED_ASSETS))) {
+            return true;
+        }
+        String customAssetPath = entry.getName();
+        Path filePath = destDirPath.resolve(customAssetPath);
+
+        if (entry.isDirectory()) {
+            if (!Files.exists(filePath)) {
+                Files.createDirectories(filePath);
+            }
+        } else {
+            Files.createDirectories(filePath.getParent());
+            replaceFileInAssets(assetPackFile, entry, filePath);
+            String fileChecksum = getFileChecksum(filePath.toFile());
+            installationVerification.put(customAssetPath, fileChecksum);
+        }
+        return false;
     }
 
     private static void replaceFileInAssets(ZipFile assetPackFile, ZipEntry entry, Path filePath) throws IOException {
@@ -117,7 +123,7 @@ public class ZipUtils {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                if (entry.isDirectory() || !entry.getName().startsWith(ASSETS_FOLDER)) {
+                if (entry.isDirectory() || !(entry.getName().startsWith(ASSETS) || entry.getName().startsWith(COMPILED_ASSETS))) {
                     continue;
                 }
                 String path = entry.getName().replace("\\", "/");
@@ -228,7 +234,7 @@ public class ZipUtils {
     public Map<String, Boolean> checkInstallation(Map<String, String> filesWithChecksum) {
         return filesWithChecksum.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, fileWithChecksum -> {
-                    Path path = gameDirectories.getAssetFolderPath().resolve(fileWithChecksum.getKey());
+                    Path path = Path.of(gameDirectories.getGameRootPath()).resolve(fileWithChecksum.getKey());
                     return Files.exists(path) &&
                             fileWithChecksum.getValue().equals(getFileChecksum(path.toFile()));
                 }));
@@ -250,7 +256,7 @@ public class ZipUtils {
             protected Void call() {
                 log.info("Uninstalling pack {}", assetsPack.archivePath());
                 Path sourceDirPath = userPreferencesService.getGameBackupFolder();
-                Path destDirPath = gameDirectories.getAssetFolderPath();
+                Path destDirPath = Path.of(gameDirectories.getGameRootPath());
                 try {
                     updateMessage("Uninstalling pack");
                     Map<String, Boolean> fileWithChecksum = installedPacksService.getInstallationDetails(assetsPack);
@@ -258,6 +264,7 @@ public class ZipUtils {
                         if (entry.getValue()) {
                             File srcFile = sourceDirPath.resolve(entry.getKey()).toFile();
                             File destFile = destDirPath.resolve(entry.getKey()).toFile();
+                            log.info("Replace file {} by {}",destFile,srcFile);
                             FileUtils.copyFile(srcFile, destFile, REPLACE_EXISTING);
                         }
                     }

@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.tiny.whiterun.services.GameDirectories.ASSETS;
+import static org.tiny.whiterun.services.GameDirectories.COMPILED_ASSETS;
+
 public class GameAssetsService {
     private static final Logger log = LoggerFactory.getLogger(GameAssetsService.class);
 
@@ -40,21 +43,13 @@ public class GameAssetsService {
                     gameDirectories.getGameDirectories().getOrCreateAssetPackFolder();
                     Thread.sleep(500);
                     log.info("Backup game assets folder");
-                    updateMessage("Backup game assets folder (this might take a while)");
                     Path assetsBackup = userPreferencesService.getGameBackupFolder();
                     if (Files.exists(assetsBackup)) {
                         FileUtils.deleteDirectory(assetsBackup.toFile());
                     }
-                    Path sourceAssets = gameDirectories.getGameDirectories().getAssetFolderPath();
-                    if (!Files.exists(sourceAssets)) {
-                        log.error("Game assets folder does not exist: {}", sourceAssets);
-                        updateMessage("Game assets folder does not exist: " + sourceAssets);
-                        throw new RuntimeException("Game assets folder does not exist: " + sourceAssets);
-                    }
+                    backupAssetsFolder(assetsBackup);
+                    backupCompliedAssetsFolder(assetsBackup);
 
-                    FileFilter filter = file -> !file.getPath().contains("audio");
-
-                    FileUtils.copyDirectory(sourceAssets.toFile(), assetsBackup.toFile(), filter);
                     log.info("patch complete");
                     updateMessage("Finished");
                     Thread.sleep(500);
@@ -65,6 +60,28 @@ public class GameAssetsService {
                     throw new RuntimeException("Error while patching the game", e);
                 }
                 return null;
+            }
+
+            private void backupAssetsFolder(Path assetsBackup) throws IOException {
+                updateMessage("Backup game assets folder (this might take a while)");
+                Path sourceAssets = gameDirectories.getGameDirectories().getAssetFolderPath();
+                if (!Files.exists(sourceAssets)) {
+                    updateMessage("Game assets folder does not exist: " + sourceAssets);
+                    throw new RuntimeException("Game assets folder does not exist: " + sourceAssets);
+                }
+                //Remove audio because folder is too heavy and not editable
+                FileFilter filter = file -> !file.getPath().contains("audio");
+                FileUtils.copyDirectory(sourceAssets.toFile(), assetsBackup.resolve(ASSETS).toFile(), filter);
+            }
+            private void backupCompliedAssetsFolder(Path assetsBackup) throws IOException {
+                updateMessage("Backup game compiled assets folder (this might take a while)");
+                Path sourceCompiledAssets = gameDirectories.getGameDirectories().getCompiledAssetFolderPath();
+                if (!Files.exists(sourceCompiledAssets)) {
+                    updateMessage("Game compiled assets folder does not exist: " + sourceCompiledAssets);
+                    throw new RuntimeException("Game compiled assets folder does not exist: " + sourceCompiledAssets);
+                }
+                FileUtils.copyDirectory(sourceCompiledAssets.toFile(), assetsBackup.resolve(COMPILED_ASSETS).toFile());
+
             }
         };
     }

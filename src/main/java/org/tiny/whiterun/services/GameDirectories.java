@@ -15,6 +15,7 @@ public class GameDirectories {
     private static final Logger log = LoggerFactory.getLogger(GameDirectories.class);
     public static final String ASSETS_PACK = "assets-pack";
     public static final String ASSETS = "assets";
+    public static final String COMPILED_ASSETS = "compiled-assets";
 
     private File gameRootPath;
 
@@ -35,6 +36,9 @@ public class GameDirectories {
 
     public Path getAssetFolderPath() {
         return Paths.get(gameRootPath.getPath(), ASSETS);
+    }
+    public Path getCompiledAssetFolderPath() {
+        return Paths.get(gameRootPath.getPath(), COMPILED_ASSETS);
     }
 
     public File getOrCreateAssetPackFolder() throws IOException {

@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-import static org.tiny.whiterun.services.ZipUtils.ASSETS_FOLDER;
-
 
 public class AssetPacksController {
 
@@ -84,7 +82,7 @@ public class AssetPacksController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         PackState packState = selectedAsset.checkInstallation();
         switch (packState) {
-            case PackState.NOT_INSTALLED -> {
+            case NOT_INSTALLED -> {
                 alert.setTitle("Install an new assets pack");
                 alert.setHeaderText("Are you sure to want to install this pack ?");
                 alert.setContentText("Install Assets Pack : " + selectedAsset.packDescriptor().name());
@@ -126,9 +124,8 @@ public class AssetPacksController {
         String zipContents = ZipUtils.getInstance().listZipContentsAsTree(selectedAsset.archivePath());
         Map<String, Boolean> installationDetails = InstalledPacksService.getInstance().getInstallationDetails(selectedAsset);
         for (String line : zipContents.split("\\r?\\n")) {
-            String customAssetPath = line.substring((ASSETS_FOLDER + "/").length());
-            Text e = new Text(customAssetPath + "\n");
-            if (!installationDetails.getOrDefault(customAssetPath, true)) {
+            Text e = new Text(line + "\n");
+            if (!installationDetails.getOrDefault(line, true)) {
                 e.setStyle("-fx-fill: #f0ad4e;");
             }
             textFlow.getChildren().add(e);

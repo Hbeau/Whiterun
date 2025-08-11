@@ -1,6 +1,7 @@
 package org.tiny.whiterun.models;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -17,6 +18,7 @@ public class PackCell extends ListCell<AssetsPack> {
     private final Text title;
     private final Text installed;
     private final Text subtitle;
+    private final Text authors;
 
     public PackCell() {
         thumbnail = new ImageView();
@@ -27,16 +29,23 @@ public class PackCell extends ListCell<AssetsPack> {
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
         installed = new Text();
-        installed.setStyle("-fx-font-size: 12px; -fx-font-style: italic;-fx-text-align: right;");
+        installed.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;-fx-text-align: right;");
 
         subtitle = new Text();
         subtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: gray;");
 
-        VBox textContainer = new VBox(title, subtitle);
-        textContainer.setSpacing(5);
+        authors = new Text();
+        authors.setStyle("-fx-font-size: 12px; -fx-text-fill: gray; -fx-font-style: italic; -fx-text-align: right;");
 
-        content = new HBox(thumbnail, textContainer, installed);
-        HBox.setHgrow(textContainer, Priority.ALWAYS);
+
+        VBox leftBox = new VBox(title, subtitle);
+        VBox rightBox = new VBox(installed, authors);
+        rightBox.setAlignment(Pos.TOP_RIGHT);
+        leftBox.setSpacing(5);
+        rightBox.setSpacing(10);
+
+        content = new HBox(thumbnail, leftBox, rightBox);
+        HBox.setHgrow(rightBox, Priority.ALWAYS);
         content.setSpacing(10);
         content.setPadding(new Insets(5));
 
@@ -67,6 +76,9 @@ public class PackCell extends ListCell<AssetsPack> {
             thumbnail.setImage(img);
             title.setText(item.packDescriptor().name());
             subtitle.setText(item.packDescriptor().description());
+            if(item.packDescriptor().authors() != null && item.packDescriptor().authors().length>0) {
+                authors.setText(String.join(" ,", item.packDescriptor().authors()));
+            }
             setGraphic(content);
         }
     }
