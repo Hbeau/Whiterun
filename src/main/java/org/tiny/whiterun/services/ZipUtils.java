@@ -1,5 +1,6 @@
 package org.tiny.whiterun.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.concurrent.Task;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -8,16 +9,20 @@ import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.exceptions.CorruptedPackageException;
 import org.tiny.whiterun.models.AssetsPack;
 import org.tiny.whiterun.models.InstalledPack;
+import org.tiny.whiterun.models.NewPackForm;
+import org.tiny.whiterun.models.PackDescriptor;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -134,26 +139,26 @@ public class ZipUtils {
         return treeBuilder.toString();
     }
 
-    public void createAssetsPack(Path assetsPath) {
+    public void createAssetsPack(NewPackForm pack) {
+        log.info("create pack : {}",pack);
         try {
             Path assetsPackPath = gameDirectories.getOrCreateAssetPackFolder().toPath();
 
-            if (!Files.isDirectory(assetsPath)) {
+            if (!Files.isDirectory(pack.assetsPath())) {
                 throw new FileNotFoundException("The 'assets' folder was not found in" + assetsPackPath + ".");
             }
 
-            Path zipFilePath = assetsPackPath.resolve("default.zip");
+            Path zipFilePath = assetsPackPath.resolve(pack.assetsPath().getFileName() + ".zip");
 
             try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFilePath));
-                 Stream<Path> walk = Files.walk(assetsPath)) {
-                //Audio folder is removed because it's too large
+                 Stream<Path> walk = Files.walk(pack.assetsPath())) {
                 walk
-                        .filter(path -> !path.toString().contains("audio"))
                         .forEach(path -> {
                             try {
                                 if (Files.isRegularFile(path)) {
-                                    String zipEntryName = "assets\\" + assetsPath.relativize(path);
-                                    zipOut.putNextEntry(new ZipEntry(zipEntryName));
+                                    String name = pack.assetsPath().relativize(path).toString();
+                                    log.info("zipping file {}", name);
+                                    zipOut.putNextEntry(new ZipEntry(name));
                                     Files.copy(path, zipOut);
                                     zipOut.closeEntry();
                                 }
@@ -161,18 +166,21 @@ public class ZipUtils {
                                 throw new RuntimeException("Error while compressing the " + path + ": " + e.getMessage(), e);
                             }
                         });
-
-                try (InputStream thumbnailInput = getClass().getResourceAsStream("default_thumbnail.jpg");
-                     InputStream manifestInput = getClass().getResourceAsStream("manifest.json")) {
-                    if (Objects.nonNull(thumbnailInput) && Objects.nonNull(manifestInput)) {
-                        zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
-                        zipOut.write(thumbnailInput.readAllBytes());
+                PackDescriptor packDescriptor = new PackDescriptor(pack.title(), pack.description(), 1, pack.authors(),List.of());
+                ObjectMapper mapper = new ObjectMapper();
+                BufferedImage thumbNailImage;
+                try {
+                    thumbNailImage = ImageIO.read(pack.image());
+                } catch (IOException e) {
+                    URL resource = getClass().getResource("default_thumbnail.jpg");
+                    thumbNailImage = ImageIO.read(resource);
+                }
+                zipOut.putNextEntry(new ZipEntry("thumbnail.jpg"));
+                        ImageIO.write(resizeImage(thumbNailImage,128,128), "jpg",zipOut);
                         zipOut.closeEntry();
                         zipOut.putNextEntry(new ZipEntry("manifest.json"));
-                        zipOut.write(manifestInput.readAllBytes());
+                        zipOut.write(mapper.writeValueAsBytes(packDescriptor));
                         zipOut.closeEntry();
-                    }
-                }
             }
             log.info("'assets' folder compressed and saved in '{}'", zipFilePath);
         } catch (Exception e) {
@@ -278,5 +286,12 @@ public class ZipUtils {
                 return null;
             }
         };
+    }
+    BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics2D = resizedImage.createGraphics();
+        graphics2D.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+        graphics2D.dispose();
+        return resizedImage;
     }
 }

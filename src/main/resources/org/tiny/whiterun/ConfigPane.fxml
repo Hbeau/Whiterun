@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <VBox fx:id="config" spacing="10" style="-fx-padding: 10" VBox.vgrow="ALWAYS" xmlns="http://javafx.com/javafx/23.0.1"
       xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.tiny.whiterun.controllers.ConfigController">
@@ -13,6 +12,7 @@
         <!-- Buttons Section -->
         <HBox alignment="CENTER" spacing="20" VBox.vgrow="ALWAYS">
             <Button id="patchButton" onAction="#onPatchGameClicked" prefHeight="34" text="Patch Game" HBox.hgrow="ALWAYS" />
-            <Button id="openPackFolder" onAction="#onAddAssetsPackClicked" prefHeight="34" text="Add Assets Pack" HBox.hgrow="ALWAYS" />
+            <Button id="openPackFolder" onAction="#onAddAssetsPackClicked" prefHeight="34" text="Open Assets Pack Folder" HBox.hgrow="ALWAYS" />
+            <Button id="CreatePack" onAction="#onCreatePack" prefHeight="34" text="Create Assets Pack" HBox.hgrow="ALWAYS" />
         </HBox>
 </VBox>
