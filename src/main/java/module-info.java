@@ -1,13 +1,10 @@
 module org.tiny.whiterun {
-    requires com.fasterxml.jackson.core;
-    requires com.sun.jna;
     requires com.sun.jna.platform;
     requires javafx.fxml;
     requires org.apache.commons.io;
     requires org.slf4j;
     requires atlantafx.base;
     requires com.fasterxml.jackson.databind;
-    requires java.desktop;
     requires org.apache.commons.codec;
 
 
