@@ -9,8 +9,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -134,13 +132,13 @@ public class AssetPacksController {
 
         textFlow.setMaxWidth(Double.MAX_VALUE);
         textFlow.setMaxHeight(Double.MAX_VALUE);
-        GridPane.setVgrow(textFlow, Priority.ALWAYS);
-        GridPane.setHgrow(textFlow, Priority.ALWAYS);
-        GridPane expContent = new GridPane();
+        ScrollPane expContent = new ScrollPane();
         expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.setMaxHeight(200);
 
-        expContent.add(textFlow, 0, 1);
+        expContent.setContent(textFlow);
         alert.getDialogPane().setExpandableContent(expContent);
+        alert.getDialogPane().setMaxHeight(400);
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent()) {
             if (result.get() == ButtonType.OK) {
