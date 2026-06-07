@@ -8,6 +8,11 @@
     <artifactId>whiterun</artifactId>
     <version>1.5.1</version>
     <name>Whiterun</name>
+    <description>A asset pack manager for Tiny Glade</description>
+    <inceptionYear>2024</inceptionYear>
+    <organization>
+        <name>A Tiny Company</name>
+    </organization>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -115,6 +120,26 @@
                     <stripDebug>true</stripDebug>
                     <noHeaderFiles>true</noHeaderFiles>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.7.0</version>
+                <executions>
+                    <execution>
+                        <id>l4j-clui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <headerType>gui</headerType>
+                            <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
+                            <outfile>${project.build.directory}/Whiterun.exe</outfile>
+                            <icon>${project.basedir}/windmill_icon.ico</icon>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
