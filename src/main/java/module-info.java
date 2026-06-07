@@ -4,8 +4,8 @@ module org.tiny.whiterun {
     requires org.apache.commons.io;
     requires org.slf4j;
     requires atlantafx.base;
-    requires com.fasterxml.jackson.databind;
     requires org.apache.commons.codec;
+    requires tools.jackson.databind;
 
 
     opens org.tiny.whiterun to javafx.fxml;

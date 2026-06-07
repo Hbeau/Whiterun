@@ -1,6 +1,5 @@
 package org.tiny.whiterun.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.concurrent.Task;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -11,6 +10,7 @@ import org.tiny.whiterun.models.AssetsPack;
 import org.tiny.whiterun.models.InstalledPack;
 import org.tiny.whiterun.models.NewPackForm;
 import org.tiny.whiterun.models.PackDescriptor;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -167,7 +167,7 @@ public class ZipUtils {
                             }
                         });
                 PackDescriptor packDescriptor = new PackDescriptor(pack.title(), pack.description(), 1, pack.authors(),List.of());
-                ObjectMapper mapper = new ObjectMapper();
+                ObjectMapper mapper = ObjectMapperFactory.create();
                 BufferedImage thumbNailImage;
                 try {
                     thumbNailImage = ImageIO.read(pack.image());

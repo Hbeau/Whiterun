@@ -1,8 +1,6 @@
 package org.tiny.whiterun.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.tiny.whiterun.exceptions.CorruptedPackageException;
 import org.tiny.whiterun.models.AssetsPack;
 import org.tiny.whiterun.models.PackDescriptor;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -36,8 +35,7 @@ public class DirectoryWatcherService extends Service<Void> {
      */
     public DirectoryWatcherService(String directoryPath) {
         this.directoryToWatch = Paths.get(directoryPath);
-        this.objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper = ObjectMapperFactory.create();
 
         if (!Files.isDirectory(this.directoryToWatch)) {
             throw new IllegalArgumentException("Invalid directory: " + directoryPath);
@@ -68,7 +66,7 @@ public class DirectoryWatcherService extends Service<Void> {
             PackDescriptor packDescriptor = objectMapper.readValue(s, PackDescriptor.class);
             log.info("load pack {}", packDescriptor);
             return Optional.of(new AssetsPack(packDescriptor, path.getFileName(), thumbnail));
-        } catch (CorruptedPackageException | JsonProcessingException e) {
+        } catch (CorruptedPackageException e) {
             log.warn("Failed to load pack {}", path.getFileName(), e);
             return Optional.empty();
         }

@@ -1,10 +1,11 @@
 package org.tiny.whiterun.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.tiny.whiterun.models.AssetsPack;
 import org.tiny.whiterun.models.InstalledPack;
 import org.tiny.whiterun.models.PackState;
 import org.tiny.whiterun.models.PacksWrapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,11 +18,12 @@ public class InstalledPacksService {
 
 
     private final Path installationFile;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private static InstalledPacksService instance;
 
     private InstalledPacksService(Path userPrefsFolder) {
+        objectMapper = ObjectMapperFactory.create();
         this.installationFile = userPrefsFolder.resolve("installation.json");
     }
 
